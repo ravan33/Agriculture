@@ -1,0 +1,269 @@
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}{{ page_title|default:"AgriVision AI" }}{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Suppress CDN warnings in production -->
+    <script>
+        // Suppress Tailwind CDN warnings
+        if (typeof console !== 'undefined' && console.warn) {
+            const originalWarn = console.warn;
+            console.warn = function(message) {
+                if (typeof message === 'string' && message.includes('cdn.tailwindcss.com should not be used in production')) {
+                    return; // Suppress this specific warning
+                }
+                originalWarn.apply(console, arguments);
+            };
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'kisan-green': '#228B22',
+                        'kisan-wheat': '#F5DEB3',
+                        'kisan-blue': '#3B82F6',
+                    },
+                    fontFamily: {
+                        'heading': ['Poppins', 'sans-serif'],
+                        'body': ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="font-body bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    {% if user.is_authenticated %}
+        <nav class="bg-kisan-green shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center min-w-0 flex-1">
+                        <div class="flex-shrink-0 flex items-center">
+                            <i class="fas fa-seedling text-white text-xl mr-2"></i>
+                            <span class="font-heading font-bold text-white text-lg whitespace-nowrap">
+                                {% if user.is_farmer %}
+                                    Farmer Portal
+                                {% elif user.is_expert %}
+                                    Expert Center
+                                {% else %}
+                                    AgriVision AI
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation Links -->
+                    <div class="hidden lg:flex items-center space-x-1">{# Changed from md:flex to lg:flex and reduced space-x-4 to space-x-1 #}
+                        <a href="{% url 'core:dashboard' %}" class="text-white hover:text-kisan-wheat px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-home mr-1"></i>{% trans "Dashboard" %}
+                        </a>
+                        
+                        {% if user.is_farmer %}
+                            <a href="{% url 'core:query_history' %}" class="text-white hover:text-kisan-wheat px-3 py-2 rounded-md text-sm font-medium">
+                                <i class="fas fa-history mr-1"></i>{% trans "My Queries" %}
+                            </a>
+                        {% endif %}
+                        
+                        <!-- User Menu -->
+                        <div class="relative group">
+                            <button class="text-white hover:text-kisan-wheat px-3 py-2 rounded-md text-sm font-medium flex items-center">
+                                <i class="fas fa-user-circle mr-1"></i>
+                                {{ user.first_name|default:user.username|truncatechars:8 }}
+                                <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                            <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
+                                <a href="{% url 'core:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user mr-2"></i>{% trans "Profile" %}
+                                </a>
+                                <a href="{% url 'core:notification_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-bell mr-2"></i>{% trans "Notifications" %}
+                                </a>
+                                {% if user.is_staff %}
+                                    <a href="/admin/" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-cog mr-2"></i>{% trans "Admin" %}
+                                    </a>
+                                {% endif %}
+                                <hr class="my-1">
+                                <a href="{% url 'core:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>{% trans "Logout" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile menu button -->
+                                        <!-- Mobile menu button -->
+                    <div class="lg:hidden flex items-center">{# Changed from md:hidden to lg:hidden #}
+                        <button type="button" class="text-white hover:text-kisan-wheat focus:outline-none focus:text-kisan-wheat" id="mobile-menu-button">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile menu -->
+            <div class="lg:hidden hidden" id="mobile-menu">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-green-700">
+                    <a href="{% url 'core:dashboard' %}" class="text-white hover:text-kisan-wheat block px-3 py-2 rounded-md text-base font-medium">
+                        <i class="fas fa-home mr-2"></i>{% trans "Dashboard" %}
+                    </a>
+                    {% if user.is_farmer %}
+                        <a href="{% url 'core:query_history' %}" class="text-white hover:text-kisan-wheat block px-3 py-2 rounded-md text-base font-medium">
+                            <i class="fas fa-history mr-2"></i>{% trans "My Queries" %}
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'core:profile' %}" class="text-white hover:text-kisan-wheat block px-3 py-2 rounded-md text-base font-medium">
+                        <i class="fas fa-user mr-2"></i>{% trans "Profile" %}
+                    </a>
+                    <a href="{% url 'core:logout' %}" class="text-white hover:text-kisan-wheat block px-3 py-2 rounded-md text-base font-medium">
+                        <i class="fas fa-sign-out-alt mr-2"></i>{% trans "Logout" %}
+                    </a>
+                </div>
+            </div>
+        </nav>
+    {% endif %}
+    
+    <!-- Messages -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            {% for message in messages %}
+                <div class="mb-4 rounded-md p-4 {% if message.tags == 'error' %}bg-red-50 border border-red-200{% elif message.tags == 'success' %}bg-green-50 border border-green-200{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200{% else %}bg-blue-50 border border-blue-200{% endif %}">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle text-red-400"></i>
+                            {% elif message.tags == 'success' %}
+                                <i class="fas fa-check-circle text-green-400"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle text-blue-400"></i>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm {% if message.tags == 'error' %}text-red-700{% elif message.tags == 'success' %}text-green-700{% elif message.tags == 'warning' %}text-yellow-700{% else %}text-blue-700{% endif %}">
+                                {{ message }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="font-heading font-semibold text-lg mb-4">{% trans "AgriVision AI" %}</h3>
+                    <p class="text-gray-300">{% trans "Digital platform connecting farmers with agricultural experts for better crop health and yield." %}</p>
+                </div>
+                <div>
+                    <h3 class="font-heading font-semibold text-lg mb-4">{% trans "Quick Links" %}</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="{% url 'core:crop_library' %}" class="hover:text-white">{% trans "Crop Library" %}</a></li>
+                        {% if user.is_authenticated %}
+                            <li><a href="{% url 'core:dashboard' %}" class="hover:text-white">{% trans "Dashboard" %}</a></li>
+                        {% else %}
+                            <li><a href="{% url 'core:login' %}" class="hover:text-white">{% trans "Login" %}</a></li>
+                            <li><a href="{% url 'core:signup' %}" class="hover:text-white">{% trans "Register" %}</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-heading font-semibold text-lg mb-4">{% trans "Contact" %}</h3>
+                    <p class="text-gray-300">
+                        <i class="fas fa-envelope mr-2"></i>
+                        support@kisanmitra.co.in
+                    </p>
+                    <p class="text-gray-300 mt-2">
+                        <i class="fas fa-phone mr-2"></i>
+                        {% trans "Support: Available 24/7" %}
+                    </p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
+                <p>&copy; 2026 {% trans "AgriVision AI. All rights reserved. | Empowering farmers through technology." %}</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script>
+        // Global error handling for extension conflicts and CSP issues
+        window.addEventListener('error', function(e) {
+            // Suppress Chrome extension related errors
+            if (e.message && (
+                e.message.includes('chrome-extension') ||
+                e.message.includes('Content Security Policy') ||
+                e.message.includes('message port closed') ||
+                e.filename && e.filename.includes('chrome-extension')
+            )) {
+                e.preventDefault();
+                return true; // Prevent error from showing in console
+            }
+        });
+        
+        // Handle unhandled promise rejections from extensions
+        window.addEventListener('unhandledrejection', function(e) {
+            if (e.reason && e.reason.message && (
+                e.reason.message.includes('message channel closed') ||
+                e.reason.message.includes('message port closed') ||
+                e.reason.message.includes('chrome-extension')
+            )) {
+                e.preventDefault(); // Prevent console errors
+            }
+        });
+        
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Auto-hide messages after 5 seconds
+        setTimeout(function() {
+            const messages = document.querySelectorAll('[class*="bg-red-50"], [class*="bg-green-50"], [class*="bg-yellow-50"], [class*="bg-blue-50"]');
+            messages.forEach(function(message) {
+                if (message.closest('.max-w-7xl')) {
+                    message.style.opacity = '0';
+                    message.style.transition = 'opacity 0.5s ease-out';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 500);
+                }
+            });
+        }, 5000);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

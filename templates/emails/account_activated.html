@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Activated - AgriVision AI</title>
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #333; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f3f4f6; 
+        }
+        .email-container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background-color: #ffffff; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        .header { 
+            background: linear-gradient(135deg, #16a34a, #22c55e); 
+            color: white; 
+            padding: 40px 20px; 
+            text-align: center; 
+        }
+        .header h1 { 
+            margin: 0; 
+            font-size: 32px; 
+            font-weight: 700; 
+        }
+        .header p { 
+            margin: 10px 0 0 0; 
+            font-size: 18px; 
+            opacity: 0.9; 
+        }
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .content { 
+            padding: 30px 25px; 
+            line-height: 1.6; 
+        }
+        .content p { 
+            margin: 0 0 16px 0; 
+            font-size: 16px; 
+        }
+        .status-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cta-button { 
+            display: inline-block; 
+            padding: 16px 32px; 
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8); 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            font-size: 16px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .cta-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 25px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            border: 2px dashed #3b82f6;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 25px 0;
+        }
+        .feature-card {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #16a34a;
+            text-align: center;
+        }
+        .feature-card h4 {
+            margin: 0 0 8px 0;
+            color: #16a34a;
+            font-size: 18px;
+        }
+        .feature-card p {
+            margin: 0;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .tips-section {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .tips-section h3 {
+            margin: 0 0 15px 0;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+        }
+        .tips-section ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .tips-section li {
+            margin: 8px 0;
+            color: #92400e;
+        }
+        .footer { 
+            background-color: #f9fafb; 
+            padding: 20px; 
+            text-align: center; 
+            border-top: 1px solid #e5e7eb; 
+        }
+        .footer p { 
+            margin: 5px 0; 
+            font-size: 14px; 
+            color: #6b7280; 
+        }
+        .signature {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+        }
+        .hindi {
+            font-style: italic;
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        @media (max-width: 600px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="success-icon">🎉</div>
+            <h1>खाता सक्रिय हो गया!</h1>
+            <p>Your Account Has Been Activated</p>
+        </div>
+        
+        <div class="content">
+            <p>बधाई हो {{ user.get_full_name|default:user.username }}!</p>
+            <p class="hindi">Congratulations {{ user.get_full_name|default:user.username }}!</p>
+            
+            <div class="status-badge">
+                ✅ Account Active
+            </div>
+            
+            <p><strong>Great news!</strong> Your <strong>AgriVision AI</strong> account has been successfully activated by our administrator. You now have full access to our comprehensive agricultural advisory platform.</p>
+            
+            <p>आपका खाता सफलतापूर्वक सक्रिय कर दिया गया है। अब आप हमारी सभी सुविधाओं का उपयोग कर सकते हैं।</p>
+            
+            <div class="cta-container">
+                <h3 style="color: #1e40af; margin-bottom: 15px;">Ready to get started?</h3>
+                <a href="{{ login_url }}" class="cta-button">
+                    🚀 Login to Your Account
+                </a>
+                <p style="margin-top: 15px; font-size: 14px; color: #6b7280;">
+                    Click the button above to access your dashboard
+                </p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h4>🌾 Ask Experts</h4>
+                    <p>Get professional advice from certified agricultural experts</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🤖 AI Diagnosis</h4>
+                    <p>Upload crop photos for instant disease identification</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📖 Crop Library</h4>
+                    <p>Access comprehensive farming guides and best practices</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📱 Mobile Friendly</h4>
+                    <p>Use our platform anywhere, anytime from your mobile device</p>
+                </div>
+            </div>
+            
+            <div class="tips-section">
+                <h3>💡 Getting Started Tips</h3>
+                <ul>
+                    <li><strong>Complete Your Profile:</strong> Add your farm details, crops, and location for personalized advice</li>
+                    <li><strong>Upload Clear Photos:</strong> For AI diagnosis, use well-lit, focused images of affected plant parts</li>
+                    <li><strong>Be Specific:</strong> When asking experts, provide detailed descriptions of problems and symptoms</li>
+                    <li><strong>Check Notifications:</strong> Stay updated with responses and new features</li>
+                    <li><strong>Explore the Library:</strong> Browse our extensive collection of crop guides and farming tips</li>
+                </ul>
+            </div>
+            
+            <p><strong>Your Role:</strong> {{ user.role|title }}</p>
+            <p><strong>Account Created:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+            <p><strong>Login Email:</strong> {{ user.email }}</p>
+            
+            <p>हमारी टीम आपकी सफल खेती की यात्रा में आपका साथ देने के लिए उत्सुक है।</p>
+            
+            <div class="signature">
+                <p><strong>Best regards,</strong><br>
+                <strong>The AgriVision AI Team</strong><br>
+                <em>सेवा में कृषि | Serving Agriculture</em></p>
+                
+                <p style="margin-top: 15px; font-size: 14px;">
+                    <strong>Need Help?</strong><br>
+                    📧 Email: <a href="mailto:support@kisanmitra.com" style="color: #16a34a;">support@kisanmitra.com</a><br>
+                    📞 Phone: +91-XXXX-XXXXXX (Coming Soon)<br>
+                    🌐 Website: <a href="{{ site_url }}" style="color: #16a34a;">www.kisanmitra.com</a>
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>AgriVision AI</strong> - Empowering Farmers Through Technology</p>
+            <p>&copy; 2026 AgriVision AI. All rights reserved. | Made with ❤️ for Indian Farmers</p>
+            <p style="font-size: 12px;">
+                You received this email because you registered for a AgriVision AI account.<br>
+                If you have any questions, please contact our support team.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

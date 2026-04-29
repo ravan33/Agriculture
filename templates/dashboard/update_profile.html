@@ -1,0 +1,206 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="font-heading font-bold text-3xl text-gray-900">{{ page_title }}</h1>
+        <p class="text-gray-600 mt-2">Update your profile information</p>
+    </div>
+    
+    <!-- Update Form -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 bg-green-50 border-b border-green-200">
+            <h2 class="text-lg font-medium text-gray-900">
+                <i class="fas fa-edit text-green-600 mr-2"></i>
+                Profile Information</h2>
+        </div>
+        
+        <form method="post" class="px-6 py-6">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Please correct the following errors:
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <ul class="list-disc list-inside space-y-1">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <li>{{ field|title }}: {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Personal Information Column -->
+                <div>
+                    <h3 class="text-base font-medium text-gray-900 mb-4">Personal Details</h3>
+                    
+                    <!-- First Name -->
+                    <div class="mb-4">
+                        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            First Name</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Last Name -->
+                    <div class="mb-4">
+                        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Last Name</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Email -->
+                    <div class="mb-4">
+                        <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Phone Number -->
+                    <div class="mb-4">
+                        <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Phone Number</label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Location & Preferences Column -->
+                <div>
+                    <h3 class="text-base font-medium text-gray-900 mb-4">Location & Preferences</h3>
+                    
+                    <!-- City -->
+                    <div class="mb-4">
+                        <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            City<span class="text-red-500">*</span>
+                        </label>
+                        {{ form.city }}
+                        {% if form.city.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.city.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-gray-500">
+                            Required for weather updates and location-based advice
+                        </p>
+                    </div>
+                    
+                    <!-- Current Account Type Display -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Account Type</label>
+                        <div class="mt-1">
+                            {% if user.is_farmer %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-seedling mr-1"></i> Farmer</span>
+                            {% elif user.is_expert %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                    <i class="fas fa-graduation-cap mr-1"></i> Expert</span>
+                            {% elif user.is_staff %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                    <i class="fas fa-cog mr-1"></i> Administrator
+                                </span>
+                            {% endif %}
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">
+                            Contact support to change your account type
+                        </p>
+                    </div>
+                    
+                    <!-- Account Status -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Account Status
+                        </label>
+                        <div class="mt-1">
+                            {% if user.is_active %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i> Active
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                    <i class="fas fa-times-circle mr-1"></i> Inactive
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <div class="flex flex-col sm:flex-row gap-4 justify-end">
+                    <a href="{% url 'core:profile' %}" 
+                       class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancel</a>
+                    
+                    <button type="submit" 
+                            class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Help Text -->
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-400"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">
+                    Profile Tips</h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Ensure your city is correct to receive accurate weather updates</li>
+                        <li>A complete profile helps us provide better recommendations</li>
+                        <li>Your email is used for important notifications</li>
+                        <li>Phone number may be used for urgent alerts</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Form field styling */
+form input[type="text"],
+form input[type="email"], 
+form input[type="tel"] {
+    @apply mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm;
+}
+
+form input:focus {
+    @apply ring-2 ring-green-500 border-green-500;
+}
+</style>
+{% endblock %}
+

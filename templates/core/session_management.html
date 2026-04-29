@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Session Management" %} | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="font-heading font-bold text-3xl text-gray-900">
+            <i class="fas fa-shield-alt mr-3 text-blue-600"></i>
+            {% trans "Session Management" %}
+        </h1>
+        <p class="text-gray-600 mt-2">{% trans "Manage your active login sessions for security" %}</p>
+    </div>
+
+    <!-- Current Session Info -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+        <h2 class="font-semibold text-lg text-blue-900 mb-4">
+            <i class="fas fa-desktop mr-2"></i>
+            {% trans "Current Session" %}
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+                <span class="font-medium text-blue-700">{% trans "Status" %}:</span>
+                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    {% trans "Active" %}
+                </span>
+            </div>
+            <div>
+                <span class="font-medium text-blue-700">{% trans "Page Views" %}:</span>
+                <span class="ml-2" id="current-page-views">{{ request.session.page_views|default:"0" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Sessions -->
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="font-semibold text-lg text-gray-900">
+                <i class="fas fa-laptop mr-2 text-green-500"></i>
+                {% trans "Active Sessions" %} ({{ total_sessions }})
+            </h2>
+            {% if total_sessions > 1 %}
+            <button onclick="terminateAllSessions()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <i class="fas fa-sign-out-alt mr-2"></i>
+                {% trans "Terminate All Other Sessions" %}
+            </button>
+            {% endif %}
+        </div>
+        
+        <div class="p-6">
+            {% if user_sessions %}
+                <div class="space-y-4">
+                    {% for session in user_sessions %}
+                    <div class="border border-gray-200 rounded-lg p-4 {% if session.is_current %}bg-blue-50 border-blue-300{% endif %}">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center mb-2">
+                                    {% if session.is_current %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-3">
+                                            <i class="fas fa-star mr-1"></i>
+                                            {% trans "Current Session" %}
+                                        </span>
+                                    {% endif %}
+                                    <span class="text-sm text-gray-500">
+                                        {% if session.login_time %}
+                                            {% trans "Started" %}: {{ session.login_time|date:"M d, Y H:i" }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="font-medium text-gray-600">{% trans "IP Address" %}:</span>
+                                        <span class="ml-2">{{ session.ip_address|default:"Unknown" }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-gray-600">{% trans "Page Views" %}:</span>
+                                        <span class="ml-2">{{ session.page_views|default:"0" }}</span>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <span class="font-medium text-gray-600">{% trans "Browser" %}:</span>
+                                        <span class="ml-2 text-xs">{{ session.user_agent|default:"Unknown" }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-gray-600">{% trans "Expires" %}:</span>
+                                        <span class="ml-2">{{ session.expire_date|date:"M d, Y H:i" }}</span>
+                                    </div>
+                                    {% if session.last_activity %}
+                                    <div>
+                                        <span class="font-medium text-gray-600">{% trans "Last Activity" %}:</span>
+                                        <span class="ml-2">{{ session.last_activity|date:"M d, Y H:i" }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if not session.is_current %}
+                            <div class="ml-4">
+                                <button onclick="terminateSession('{{ session.session_key }}')" 
+                                        class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm">
+                                    <i class="fas fa-times mr-1"></i>
+                                    {% trans "Terminate" %}
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-laptop text-4xl mb-4"></i>
+                    <p>{% trans "No active sessions found" %}</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Security Tips -->
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+        <h3 class="font-semibold text-lg text-yellow-900 mb-4">
+            <i class="fas fa-shield-alt mr-2"></i>
+            {% trans "Security Tips" %}
+        </h3>
+        <ul class="text-sm text-yellow-800 space-y-2">
+            <li><i class="fas fa-check mr-2"></i>{% trans "Always log out from public computers" %}</li>
+            <li><i class="fas fa-check mr-2"></i>{% trans "Terminate sessions you don't recognize" %}</li>
+            <li><i class="fas fa-check mr-2"></i>{% trans "Use strong, unique passwords" %}</li>
+            <li><i class="fas fa-check mr-2"></i>{% trans "Sessions expire automatically after 1 hour of inactivity" %}</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+function terminateSession(sessionKey) {
+    if (!confirm('{% trans "Are you sure you want to terminate this session?" %}')) {
+        return;
+    }
+    
+    fetch('{% url "core:terminate_session" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: 'session_key=' + encodeURIComponent(sessionKey)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('{% trans "Error terminating session" %}: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('{% trans "Network error" %}');
+    });
+}
+
+function terminateAllSessions() {
+    if (!confirm('{% trans "Are you sure you want to terminate all other sessions? You will remain logged in on this device." %}')) {
+        return;
+    }
+    
+    fetch('{% url "core:terminate_all_sessions" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCsrfToken()
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('{% trans "Successfully terminated" %} ' + data.terminated_count + ' {% trans "sessions" %}');
+            location.reload();
+        } else {
+            alert('{% trans "Error terminating sessions" %}: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('{% trans "Network error" %}');
+    });
+}
+
+function getCsrfToken() {
+    const token = document.querySelector('[name=csrfmiddlewaretoken]');
+    return token ? token.value : document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
+}
+</script>
+{% endblock %}

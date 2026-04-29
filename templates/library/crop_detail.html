@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ crop_name }} - Crop Information{% endblock %}
+
+{% block extra_css %}
+<style>
+    .crop-hero {
+        background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 15px;
+    }
+    
+    .crop-content {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        line-height: 1.8;
+    }
+    
+    .crop-info-display {
+        font-size: 1.1rem;
+        color: #333;
+    }
+    
+    .crop-info-display br {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Style bullet points */
+    .crop-info-display:contains("•") {
+        margin-left: 1rem;
+    }
+    
+    .crop-content h2 {
+        color: #2E7D32;
+        border-bottom: 3px solid #4CAF50;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .crop-content h3 {
+        color: #388E3C;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .crop-content ul {
+        margin-left: 1.5rem;
+    }
+    
+    .crop-content li {
+        margin-bottom: 0.8rem;
+        position: relative;
+    }
+    
+    .crop-content li::marker {
+        color: #4CAF50;
+    }
+    
+    .farming-steps {
+        background: #F8F9FA;
+        border-left: 5px solid #4CAF50;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border-radius: 0 10px 10px 0;
+    }
+    
+    .farming-steps h4 {
+        color: #2E7D32;
+        margin-bottom: 1rem;
+    }
+    
+    .step-item {
+        background: white;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 4px solid #4CAF50;
+    }
+    
+    .step-number {
+        background: #4CAF50;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+    
+    .info-card {
+        background: linear-gradient(135deg, #E8F5E8 0%, #F1F8E9 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        border: 1px solid #C8E6C9;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .info-item:hover {
+        transform: translateY(-5px);
+    }
+    
+    .info-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .back-btn {
+        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(76, 175, 80, 0.3);
+    }
+    
+    .back-btn:hover {
+        background: linear-gradient(135deg, #388E3C 0%, #4CAF50 100%);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+    }
+    
+    .season-badge {
+        background: #FF9800;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        display: inline-block;
+        margin-left: 0.5rem;
+    }
+    
+    .yield-tips {
+        background: #FFF3E0;
+        border: 2px solid #FFB74D;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+    }
+    
+    .yield-tips h4 {
+        color: #F57C00;
+        margin-bottom: 1rem;
+    }
+    
+    .highlight-text {
+        background: linear-gradient(120deg, #FFEB3B 0%, transparent 100%);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .crop-hero {
+            padding: 2rem 0;
+        }
+        
+        .crop-content {
+            padding: 1.5rem;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Back Button -->
+    <a href="{% url 'core:crop_library' %}" class="back-btn">
+        <i class="fas fa-arrow-left me-2"></i>
+        Back to Crop Library
+    </a>
+
+    <!-- Hero Section -->
+    <div class="crop-hero text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="fas fa-seedling me-3"></i>{{ crop_name }}
+            </h1>
+            <p class="lead">Complete farming guide and cultivation information</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2">
+                <!-- Quick Info Cards -->
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-icon">🌱</span>
+                        <h5>Crop Type</h5>
+                        <p class="mb-0">{{ crop_name }}</p>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">📅</span>
+                        <h5>Season</h5>
+                        <p class="mb-0">Kharif/Rabi</p>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🌧️</span>
+                        <h5>Water Needs</h5>
+                        <p class="mb-0">Moderate</p>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">⏱️</span>
+                        <h5>Duration</h5>
+                        <p class="mb-0">3-4 Months</p>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="crop-content">
+                    {% if crop_content %}
+                        <div class="crop-info-display">
+                            {{ crop_content|linebreaksbr }}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-exclamation-triangle display-1 text-warning mb-3"></i>
+                            <h3>Information Not Available</h3>
+                            <p class="text-muted">
+                                Detailed farming information for {{ crop_name }} is currently not available.
+                                Please check back later or contact our experts for guidance.
+                            </p>
+                            <a href="{% url 'core:create_query' %}" class="btn btn-success">
+                                <i class="fas fa-question-circle me-2"></i>Ask an Expert
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="text-center mb-5">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <a href="{% url 'core:create_query' %}" class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-question-circle me-2"></i>
+                                Ask Expert
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{% url 'core:ai_diagnose' %}" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-microscope me-2"></i>
+                                AI Diagnosis
+                            </a>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <a href="{% url 'core:market_prices' %}" class="btn btn-warning btn-lg w-100">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Market Prices
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weather Widget (if location available) -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="info-card">
+                <h4 class="mb-3">
+                    <i class="fas fa-cloud-sun me-2"></i>Weather Information
+                </h4>
+                <p class="text-muted">
+                    Check current weather conditions to plan your farming activities for {{ crop_name }}.
+                </p>
+                <div id="weather-widget" class="text-center">
+                    <button class="btn btn-outline-primary" onclick="loadWeather()">
+                        <i class="fas fa-sync-alt me-2"></i>Load Weather
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function loadWeather() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                fetch(`/ajax/weather-by-location/?lat=${lat}&lon=${lon}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const weather = data.weather_data;
+                            document.getElementById('weather-widget').innerHTML = `
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <h5>Temperature</h5>
+                                        <p class="h4 text-primary">${weather.temperature}°C</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h5>Humidity</h5>
+                                        <p class="h4 text-info">${weather.humidity}%</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h5>Condition</h5>
+                                        <p class="h6">${weather.description}</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h5>Wind Speed</h5>
+                                        <p class="h6">${weather.wind_speed} m/s</p>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            document.getElementById('weather-widget').innerHTML = 
+                                '<p class="text-warning">Weather data unavailable</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Weather error:', error);
+                        document.getElementById('weather-widget').innerHTML = 
+                            '<p class="text-danger">Error loading weather</p>';
+                    });
+            }, function(error) {
+                document.getElementById('weather-widget').innerHTML = 
+                    '<p class="text-warning">Location access denied</p>';
+            });
+        } else {
+            document.getElementById('weather-widget').innerHTML = 
+                '<p class="text-warning">Geolocation not supported</p>';
+        }
+    }
+</script>
+{% endblock %}

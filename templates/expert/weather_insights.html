@@ -1,0 +1,372 @@
+﻿{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} | AgriVision AI{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="font-heading font-bold text-3xl text-gray-900 mb-2">
+                    <i class="fas fa-cloud-sun text-blue-500 mr-3"></i>
+                    {% trans "Weather Insights" %}</h1>
+                <p class="text-gray-600">{% trans "Check regional weather conditions to provide better farming advice to farmers" %}</p>
+            </div>
+            <a href="{% url 'core:dashboard' %}" 
+               class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition duration-300">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {% trans "Back to Dashboard" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Weather Search Panel -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="font-semibold text-lg text-gray-900 mb-4">
+                    <i class="fas fa-search mr-2 text-blue-500"></i>
+                    {% trans "Search Weather" %}
+                </h2>
+                
+                <div class="space-y-4">
+                    <!-- City Search -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {% trans "Select City" %}
+                        </label>
+                        <select id="city-select" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">{% trans "Choose a city..." %}</option>
+                            {% for city in available_cities %}
+                            <option value="{{ city }}">{{ city }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Manual Location -->
+                    <div class="border-t pt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {% trans "Or Enter Custom Location" %}
+                        </label>
+                        <input type="text" id="custom-location" 
+                               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="{% trans 'Enter city name...' %}">
+                    </div>
+                    
+                    <!-- GPS Location -->
+                    <div class="border-t pt-4">
+                        <button onclick="getCurrentLocation()" 
+                                class="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-300">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            {% trans "Use Current Location" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h3 class="font-semibold text-lg text-gray-900 mb-4">
+                    {% trans "Quick Actions" %}
+                </h3>
+                <div class="space-y-3">
+                    <button onclick="generateWeatherAdvice()" 
+                            class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300 text-sm">
+                        <i class="fas fa-lightbulb mr-2"></i>
+                        {% trans "Generate Farming Advice" %}
+                    </button>
+                    <button onclick="exportWeatherData()" 
+                            class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-300 text-sm">
+                        <i class="fas fa-download mr-2"></i>
+                        {% trans "Export Data" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weather Display Panel -->
+        <div class="lg:col-span-2">
+            <!-- Current Weather -->
+            <div id="weather-display" class="bg-white rounded-lg shadow-md p-6 mb-6" style="display: none;">
+                <h2 class="font-semibold text-lg text-gray-900 mb-4">
+                    <i class="fas fa-thermometer-half mr-2 text-orange-500"></i>
+                    {% trans "Current Weather Conditions" %}
+                </h2>
+                <div id="current-weather-content">
+                    <!-- Weather content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Farming Advice -->
+            <div id="farming-advice" class="bg-white rounded-lg shadow-md p-6 mb-6" style="display: none;">
+                <h2 class="font-semibold text-lg text-gray-900 mb-4">
+                    <i class="fas fa-seedling mr-2 text-green-500"></i>
+                    {% trans "Weather-Based Farming Advice" %}
+                </h2>
+                <div id="advice-content">
+                    <!-- Advice content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- 5-Day Forecast -->
+            <div id="forecast-display" class="bg-white rounded-lg shadow-md p-6" style="display: none;">
+                <h2 class="font-semibold text-lg text-gray-900 mb-4">
+                    <i class="fas fa-calendar-week mr-2 text-purple-500"></i>
+                    {% trans "5-Day Forecast" %}
+                </h2>
+                <div id="forecast-content">
+                    <!-- Forecast content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Default Message -->
+            <div id="default-message" class="bg-gray-50 rounded-lg p-12 text-center">
+                <div class="text-gray-400 mb-4">
+                    <i class="fas fa-cloud-sun text-6xl"></i>
+                </div>
+                <h3 class="font-semibold text-lg text-gray-600 mb-2">
+                    {% trans "Select a location to view weather data" %}
+                </h3>
+                <p class="text-gray-500">
+                    {% trans "Choose a city from the dropdown or use your current location to get started" %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-8 text-center">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p class="text-gray-700">{% trans "Loading weather data..." %}</p>
+    </div>
+</div>
+
+<script>
+let currentWeatherData = null;
+
+// City selection handler
+document.getElementById('city-select').addEventListener('change', function() {
+    const city = this.value;
+    if (city) {
+        document.getElementById('custom-location').value = '';
+        loadWeatherForCity(city);
+    }
+});
+
+// Custom location handler
+document.getElementById('custom-location').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        const location = this.value.trim();
+        if (location) {
+            document.getElementById('city-select').value = '';
+            loadWeatherForCity(location);
+        }
+    }
+});
+
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        showLoading();
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                loadWeatherByCoordinates(position.coords.latitude, position.coords.longitude);
+            },
+            function(error) {
+                hideLoading();
+                alert('{% trans "Could not get your location. Please select a city manually." %}');
+            }
+        );
+    } else {
+        alert('{% trans "Geolocation is not supported by this browser." %}');
+    }
+}
+
+function loadWeatherForCity(city) {
+    showLoading();
+    
+    // Simulate weather API call - replace with actual API
+    setTimeout(() => {
+        const mockWeatherData = {
+            city: city,
+            temperature: Math.round(Math.random() * 15 + 20),
+            condition: ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy'][Math.floor(Math.random() * 4)],
+            humidity: Math.round(Math.random() * 30 + 50),
+            windSpeed: Math.round(Math.random() * 15 + 5),
+            pressure: Math.round(Math.random() * 20 + 1000),
+            rainfall: Math.round(Math.random() * 10 * 100) / 100
+        };
+        
+        displayWeatherData(mockWeatherData);
+        hideLoading();
+    }, 1500);
+}
+
+function loadWeatherByCoordinates(lat, lon) {
+    // Use the existing weather endpoint
+    fetch(`{% url 'core:weather_by_location' %}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+            latitude: lat,
+            longitude: lon
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayWeatherData(data.weather_data);
+            displayWeatherAdvice(data.weather_advice);
+        } else {
+            alert('{% trans "Could not fetch weather data for your location." %}');
+        }
+        hideLoading();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        hideLoading();
+        alert('{% trans "Error fetching weather data." %}');
+    });
+}
+
+function displayWeatherData(weatherData) {
+    currentWeatherData = weatherData;
+    
+    const weatherHtml = `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="text-4xl font-bold text-blue-600 mb-2">${weatherData.temperature}°C</div>
+                <div class="text-gray-600">${weatherData.condition}</div>
+                <div class="text-sm text-gray-500 mt-2">${weatherData.city}</div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-blue-50 p-3 rounded-lg text-center">
+                    <i class="fas fa-tint text-blue-500 mb-2"></i>
+                    <div class="text-sm text-gray-600">{% trans "Humidity" %}</div>
+                    <div class="font-semibold">${weatherData.humidity}%</div>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg text-center">
+                    <i class="fas fa-wind text-green-500 mb-2"></i>
+                    <div class="text-sm text-gray-600">{% trans "Wind Speed" %}</div>
+                    <div class="font-semibold">${weatherData.windSpeed} km/h</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-purple-50 p-3 rounded-lg text-center">
+                    <i class="fas fa-thermometer-half text-purple-500 mb-2"></i>
+                    <div class="text-sm text-gray-600">{% trans "Pressure" %}</div>
+                    <div class="font-semibold">${weatherData.pressure} hPa</div>
+                </div>
+                <div class="bg-indigo-50 p-3 rounded-lg text-center">
+                    <i class="fas fa-cloud-rain text-indigo-500 mb-2"></i>
+                    <div class="text-sm text-gray-600">{% trans "Rainfall" %}</div>
+                    <div class="font-semibold">${weatherData.rainfall} mm</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('current-weather-content').innerHTML = weatherHtml;
+    document.getElementById('default-message').style.display = 'none';
+    document.getElementById('weather-display').style.display = 'block';
+}
+
+function displayWeatherAdvice(adviceList) {
+    if (!adviceList || adviceList.length === 0) return;
+    
+    const adviceHtml = `
+        <div class="space-y-4">
+            ${adviceList.map(advice => `
+                <div class="border-l-4 border-green-500 bg-green-50 p-4 rounded-r-lg">
+                    <div class="flex items-start">
+                        <i class="fas fa-lightbulb text-green-500 mr-3 mt-1"></i>
+                        <p class="text-gray-700">${advice}</p>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    document.getElementById('advice-content').innerHTML = adviceHtml;
+    document.getElementById('farming-advice').style.display = 'block';
+}
+
+function generateWeatherAdvice() {
+    if (!currentWeatherData) {
+        alert('{% trans "Please select a location first to get weather data." %}');
+        return;
+    }
+    
+    // Generate advice based on weather conditions
+    let advice = [];
+    
+    if (currentWeatherData.temperature > 35) {
+        advice.push('{% trans "High temperature detected. Consider providing shade for crops and increase irrigation frequency." %}');
+        advice.push('{% trans "Avoid spraying pesticides during peak heat hours (11 AM - 3 PM)." %}');
+    }
+    
+    if (currentWeatherData.humidity > 80) {
+        advice.push('{% trans "High humidity levels may promote fungal diseases. Monitor crops closely." %}');
+        advice.push('{% trans "Ensure proper ventilation in greenhouse crops." %}');
+    }
+    
+    if (currentWeatherData.rainfall > 5) {
+        advice.push('{% trans "Recent rainfall detected. Check for waterlogging in fields." %}');
+        advice.push('{% trans "Delay fertilizer application until soil moisture reduces." %}');
+    }
+    
+    if (currentWeatherData.windSpeed > 25) {
+        advice.push('{% trans "High wind speed may cause crop damage. Secure tall crops and structures." %}');
+    }
+    
+    if (advice.length === 0) {
+        advice.push('{% trans "Weather conditions are favorable for most farming activities." %}');
+        advice.push('{% trans "Good time for field preparation and crop monitoring." %}');
+    }
+    
+    displayWeatherAdvice(advice);
+}
+
+function exportWeatherData() {
+    if (!currentWeatherData) {
+        alert('{% trans "No weather data to export. Please select a location first." %}');
+        return;
+    }
+    
+    const data = {
+        city: currentWeatherData.city,
+        date: new Date().toISOString(),
+        temperature: currentWeatherData.temperature,
+        condition: currentWeatherData.condition,
+        humidity: currentWeatherData.humidity,
+        windSpeed: currentWeatherData.windSpeed,
+        pressure: currentWeatherData.pressure,
+        rainfall: currentWeatherData.rainfall
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `weather_data_${currentWeatherData.city}_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function showLoading() {
+    document.getElementById('loading-modal').classList.remove('hidden');
+}
+
+function hideLoading() {
+    document.getElementById('loading-modal').classList.add('hidden');
+}
+</script>
+{% endblock %}
+

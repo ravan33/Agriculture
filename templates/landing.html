@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "AgriVision AI - Digital Kisan Seva" %}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="relative min-h-screen bg-cover bg-center bg-no-repeat" style="background-image: linear-gradient(rgba(34, 139, 34, 0.7), rgba(34, 139, 34, 0.7)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2089&q=80');">
+    <div class="absolute inset-0 bg-black bg-opacity-20"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
+        <div class="text-center">
+            <!-- Logo/Icon -->
+            <div class="flex justify-center mb-8">
+                <div class="bg-white bg-opacity-20 rounded-full p-6">
+                    <i class="fas fa-seedling text-6xl text-white"></i>
+                </div>
+            </div>
+            
+            <!-- Main Heading -->
+            <h1 class="font-heading font-bold text-5xl md:text-7xl text-white mb-6">
+                {% trans "AgriVision AI" %}
+            </h1>
+            <h2 class="font-heading font-semibold text-2xl md:text-4xl text-kisan-wheat mb-4">
+                {% trans "Digital Kisan Seva" %}
+            </h2>
+            
+            <!-- Subtitle -->
+            <p class="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto leading-relaxed">
+                {% trans "Expert Advice for Healthy Crops" %}
+            </p>
+            
+            <!-- Call to Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'core:signup' %}" class="bg-white text-kisan-green px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition duration-300 shadow-lg">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        {% trans "Get Started" %}
+                    </a>
+                    <a href="{% url 'core:login' %}" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-kisan-green transition duration-300">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        {% trans "Login" %}
+                    </a>
+                {% else %}
+                    <a href="{% url 'core:dashboard' %}" class="bg-white text-kisan-green px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition duration-300 shadow-lg">
+                        <i class="fas fa-home mr-2"></i>
+                        {% trans "Go to Dashboard" %}
+                    </a>
+                {% endif %}
+            </div>
+            
+            <!-- Key Features Preview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                    <i class="fas fa-question-circle text-3xl mb-4 text-kisan-wheat"></i>
+                    <h3 class="font-heading font-semibold text-lg mb-2">{% trans "Agricultural Advisory" %}</h3>
+                    <p class="text-sm">{% trans "Get expert advice for your crop problems" %}</p>
+                </div>
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                    <i class="fas fa-brain text-3xl mb-4 text-kisan-wheat"></i>
+                    <h3 class="font-heading font-semibold text-lg mb-2">{% trans "Crop Guardian" %}</h3>
+                    <p class="text-sm">{% trans "AI-powered disease diagnosis" %}</p>
+                </div>
+                <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 text-white">
+                    <i class="fas fa-book text-3xl mb-4 text-kisan-wheat"></i>
+                    <h3 class="font-heading font-semibold text-lg mb-2">{% trans "Fasal Gyan" %}</h3>
+                    <p class="text-sm">{% trans "Comprehensive crop planning library" %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-heading font-bold text-4xl text-gray-900 mb-4">
+                {% trans "How AgriVision AI Helps You" %}
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                {% trans "Explainable AI-Driven Climate Adaptive Agricultural Decision Support and Disease Detection System with Expert Advisory Framework" %}
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Feature 1 -->
+            <div class="text-center group">
+                <div class="bg-kisan-green bg-opacity-10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-kisan-green group-hover:bg-opacity-20 transition duration-300">
+                    <i class="fas fa-user-md text-3xl text-kisan-green"></i>
+                </div>
+                <h3 class="font-heading font-semibold text-xl mb-4">{% trans "Expert Consultation" %}</h3>
+                <p class="text-gray-600">{% trans "Connect directly with agricultural experts for personalized advice on crop health and farming practices." %}</p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="text-center group">
+                <div class="bg-kisan-green bg-opacity-10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-kisan-green group-hover:bg-opacity-20 transition duration-300">
+                    <i class="fas fa-robot text-3xl text-kisan-green"></i>
+                </div>
+                <h3 class="font-heading font-semibold text-xl mb-4">AI Disease Detection</h3>
+                <p class="text-gray-600">Upload crop images for instant AI-powered disease diagnosis and treatment recommendations.</p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="text-center group">
+                <div class="bg-kisan-green bg-opacity-10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-kisan-green group-hover:bg-opacity-20 transition duration-300">
+                    <i class="fas fa-bell text-3xl text-kisan-green"></i>
+                </div>
+                <h3 class="font-heading font-semibold text-xl mb-4">Real-time Notifications</h3>
+                <p class="text-gray-600">Get instant notifications when experts respond to your queries or important updates are available.</p>
+            </div>
+            
+            <!-- Feature 4 -->
+            <div class="text-center group">
+                <div class="bg-kisan-green bg-opacity-10 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 group-hover:bg-kisan-green group-hover:bg-opacity-20 transition duration-300">
+                    <i class="fas fa-chart-line text-3xl text-kisan-green"></i>
+                </div>
+                <h3 class="font-heading font-semibold text-xl mb-4">Crop Planning</h3>
+                <p class="text-gray-600">Access comprehensive planning guides for various crops including timing, care, and best practices.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="font-heading font-bold text-4xl text-gray-900 mb-4">
+                {% trans "How It Works" %}
+            </h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                {% trans "Simple steps to get expert help for your farming needs" %}
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center">
+                <div class="bg-kisan-green text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                    1
+                </div>
+                <h3 class="font-heading font-semibold text-xl mb-4">{% trans "Register & Login" %}</h3>
+                <p class="text-gray-600">{% trans "Create your account as a farmer or expert. Wait for admin activation to ensure platform security." %}</p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="text-center">
+                <div class="bg-kisan-green text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                    2
+                </div>
+                <h3 class="font-heading font-semibold text-xl mb-4">{% trans "Submit Query or Use AI" %}</h3>
+                <p class="text-gray-600">{% trans "Upload crop images and describe your problem. Get instant AI diagnosis or connect with experts." %}</p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="text-center">
+                <div class="bg-kisan-green text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 text-2xl font-bold">
+                    3
+                </div>
+                <h3 class="font-heading font-semibold text-xl mb-4">{% trans "Get Expert Advice" %}</h3>
+                <p class="text-gray-600">{% trans "Receive personalized recommendations and follow-up support from qualified agricultural experts." %}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics Section -->
+<section class="py-16 bg-kisan-green">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center text-white">
+            <div>
+                <div class="text-4xl font-bold mb-2">1000+</div>
+                <div class="text-kisan-wheat">Farmers Helped</div>
+            </div>
+            <div>
+                <div class="text-4xl font-bold mb-2">50+</div>
+                <div class="text-kisan-wheat">Expert Advisors</div>
+            </div>
+            <div>
+                <div class="text-4xl font-bold mb-2">95%</div>
+                <div class="text-kisan-wheat">Accuracy Rate</div>
+            </div>
+            <div>
+                <div class="text-4xl font-bold mb-2">24/7</div>
+                <div class="text-kisan-wheat">Support Available</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action Section -->
+{% if not user.is_authenticated %}
+<section class="py-16 bg-gray-900 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="font-heading font-bold text-4xl mb-4">
+            Ready to Transform Your Farming?
+        </h2>
+        <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            Join thousands of farmers who are already benefiting from expert advice and AI-powered crop management.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'core:signup' %}" class="bg-kisan-green text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-green-700 transition duration-300">
+                <i class="fas fa-user-plus mr-2"></i>
+                {% trans "Join as Farmer" %}
+            </a>
+            <a href="{% url 'core:signup' %}" class="border-2 border-kisan-green text-kisan-green px-8 py-4 rounded-lg font-semibold text-lg hover:bg-kisan-green hover:text-white transition duration-300">
+                <i class="fas fa-graduation-cap mr-2"></i>
+                {% trans "Join as Expert" %}
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

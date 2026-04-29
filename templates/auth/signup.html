@@ -1,0 +1,228 @@
+﻿{% extends 'base.html' %}
+
+{% block title %} - Signup | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-cover bg-center bg-no-repeat flex items-center justify-center py-12" style="background-image: linear-gradient(rgba(34, 139, 34, 0.8), rgba(34, 139, 34, 0.8)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=2089&q=80');">
+    <div class="max-w-lg w-full mx-4">
+        <!-- Signup Card -->
+        <div class="bg-white rounded-lg shadow-2xl p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="bg-kisan-green bg-opacity-10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-plus text-2xl text-kisan-green"></i>
+                </div>
+                <h2 class="font-heading font-bold text-3xl text-gray-900"> - Register</h2>
+                <p class="text-gray-600 mt-2">Join the AgriVision AI community</p>
+            </div>
+            
+            <!-- Signup Form -->
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- First Name and Last Name -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-1"></i>First Name *
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.first_name.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Last Name *
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.last_name.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Username -->
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-at mr-1"></i>Username *
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.username.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-envelope mr-1"></i>Email Address *
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.email.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- User Type -->
+                <div>
+                    <label for="{{ form.user_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-users mr-1"></i>I am a *
+                    </label>
+                    {{ form.user_type }}
+                    {% if form.user_type.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.user_type.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">
+                        Choose "Farmer" if you need advice, "Expert" if you provide agricultural expertise
+                    </p>
+                </div>
+                
+                <!-- Phone Number -->
+                <div>
+                    <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-phone mr-1"></i>Phone Number
+                    </label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.phone_number.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Address -->
+                <div>
+                    <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-map-marker-alt mr-1"></i>Address
+                    </label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.address.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Password -->
+                <div>
+                    <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-1"></i>Password *
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.password1.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Confirm Password -->
+                <div>
+                    <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-lock mr-1"></i>Confirm Password *
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.password2.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Terms and Conditions -->
+                <div class="flex items-start">
+                    <input id="terms" name="terms" type="checkbox" required class="h-4 w-4 text-kisan-green focus:ring-kisan-green border-gray-300 rounded mt-1">
+                    <label for="terms" class="ml-2 block text-sm text-gray-700">
+                        I agree to the <a href="#" class="text-kisan-green hover:text-green-700">Terms and Conditions</a> and <a href="#" class="text-kisan-green hover:text-green-700">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="w-full bg-kisan-green text-white py-3 px-4 rounded-md font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-kisan-green focus:ring-offset-2 transition duration-300">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Create Account</button>
+                </div>
+                
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                    <div class="rounded-md bg-red-50 p-4">
+                        <div class="text-sm text-red-700">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </form>
+            
+            <!-- Login Link -->
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Already have an account?
+                    <a href="{% url 'core:login' %}" class="text-kisan-green hover:text-green-700 font-medium">
+                        Sign in here</a>
+                </p>
+            </div>
+            
+            <!-- Back to Home -->
+            <div class="mt-4 text-center">
+                <a href="{% url 'core:landing' %}" class="text-sm text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+        
+        <!-- Important Notice -->
+        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">
+                        Account Activation Required
+                    </h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>
+                            Your account will require admin approval before you can access the platform. 
+                            This ensures the security and quality of our community.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

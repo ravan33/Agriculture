@@ -1,0 +1,1161 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} | AgriVision AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .nav-widget {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 2.5rem 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(34, 139, 34, 0.3);
+        background: linear-gradient(135deg, rgba(34, 139, 34, 0.15), rgba(34, 139, 34, 0.08));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(34, 139, 34, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        min-height: 180px;
+    }
+
+    .nav-widget:hover {
+        border-color: rgba(34, 139, 34, 0.5);
+        background: linear-gradient(135deg, rgba(34, 139, 34, 0.25), rgba(34, 139, 34, 0.15));
+        box-shadow: 0 16px 48px rgba(34, 139, 34, 0.2);
+        transform: translateY(-4px);
+    }
+
+    .nav-widget-icon {
+        font-size: 2.5rem;
+        color: rgb(34, 139, 34);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 4.5rem;
+        height: 4.5rem;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, rgba(34, 139, 34, 0.2), rgba(34, 139, 34, 0.1));
+        border: 1px solid rgba(34, 139, 34, 0.3);
+    }
+
+    .nav-widget-label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="font-heading font-bold text-3xl text-gray-900">
+            <i class="fas fa-cogs mr-3 text-blue-600"></i>
+            {{ page_title }}
+        </h1>
+        <p class="text-gray-600 mt-2">{% trans "System administration and user management" %}</p>
+        
+        <!-- GPS Location Widget -->
+        <div id="location-widget" class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-600 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📍</span>
+                    <div>
+                        <p class="text-xs text-gray-600 font-semibold">Current Location</p>
+                        <p id="dashboard-location" class="text-sm font-medium text-gray-800">Detecting location...</p>
+                        <p id="dashboard-coordinates" class="text-xs text-gray-500 mt-1">GPS: Waiting...</p>
+                    </div>
+                </div>
+                <button id="refresh-location-btn" type="button" 
+                    class="px-3 py-2 bg-white hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-md border border-gray-300 transition">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Users -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">{% trans "Total Users" %}</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ total_users }}</p>
+                </div>
+                <div class="bg-blue-100 rounded-full p-3">
+                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Approvals -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">{% trans "Pending Approvals" %}</p>
+                    <p class="text-3xl font-bold text-red-600">{{ pending_users }}</p>
+                </div>
+                <div class="bg-red-100 rounded-full p-3">
+                    <i class="fas fa-user-clock text-red-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Queries -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">{% trans "Total Queries" %}</p>
+                    <p class="text-3xl font-bold text-green-600">{{ total_queries }}</p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-question-circle text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Queries -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">{% trans "Pending Queries" %}</p>
+                    <p class="text-3xl font-bold text-yellow-600">{{ pending_queries }}</p>
+                </div>
+                <div class="bg-yellow-100 rounded-full p-3">
+                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- User Management -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-heading font-semibold text-lg mb-2">{% trans "User Management" %}</h3>
+                    <p class="text-blue-100 mb-4">Manage user accounts and approvals</p>
+                    <a href="#user-management" class="bg-white text-blue-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition duration-300">
+                        {% trans "Manage Users" %}
+                    </a>
+                </div>
+                <i class="fas fa-users-cog text-4xl text-blue-200"></i>
+            </div>
+        </div>
+
+        <!-- System Admin -->
+        <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-heading font-semibold text-lg mb-2">{% trans "Admin Panel" %}</h3>
+                    <p class="text-green-100 mb-4">Access Django admin interface</p>
+                    <a href="/admin/" target="_blank" class="bg-white text-green-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition duration-300">
+                        {% trans "Open Admin" %}
+                    </a>
+                </div>
+                <i class="fas fa-cog text-4xl text-green-200"></i>
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="font-heading font-semibold text-lg mb-2">{% trans "Reports" %}</h3>
+                    <p class="text-purple-100 mb-4">System analytics and reports</p>
+                    <button id="view-reports" class="bg-white text-purple-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition duration-300">
+                        {% trans "View Reports" %}
+                    </button>
+                </div>
+                <i class="fas fa-chart-bar text-4xl text-purple-200"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div id="user-management" class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 class="font-heading font-semibold text-lg text-gray-900">
+                <i class="fas fa-user-friends mr-2 text-blue-500"></i>
+                {% trans "User Management" %}
+            </h2>
+            <div class="flex space-x-2">
+                <button id="refresh-users" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    {% trans "Refresh" %}
+                </button>
+                <div class="relative">
+                    <select id="user-filter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                        <option value="all">{% trans "All Users" %}</option>
+                        <option value="pending">{% trans "Pending Approval" %}</option>
+                        <option value="farmers">{% trans "Farmers" %}</option>
+                        <option value="experts">{% trans "Experts" %}</option>
+                        <option value="admins">{% trans "Administrators" %}</option>
+                        <option value="active">{% trans "Active Users" %}</option>
+                        <option value="inactive">{% trans "Inactive Users" %}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <!-- Bulk Actions -->
+            <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" id="select-all-users" class="form-checkbox h-4 w-4 text-blue-600">
+                            <span class="ml-2 text-sm text-gray-700">{% trans "Select All" %}</span>
+                        </label>
+                        <span id="selected-count" class="text-sm text-gray-600">0 {% trans "selected" %}</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="bulk-approve" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50" disabled>
+                            <i class="fas fa-check mr-1"></i>
+                            {% trans "Approve Selected" %}
+                        </button>
+                        <button id="bulk-reject" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50" disabled>
+                            <i class="fas fa-times mr-1"></i>
+                            {% trans "Reject Selected" %}
+                        </button>
+                        <button id="bulk-activate" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50" disabled>
+                            <i class="fas fa-user-check mr-1"></i>
+                            {% trans "Activate Selected" %}
+                        </button>
+                        <button id="bulk-deactivate" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50" disabled>
+                            <i class="fas fa-user-times mr-1"></i>
+                            {% trans "Deactivate Selected" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="overflow-x-auto">
+                <table id="users-table" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-blue-600">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "User" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Type" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Status" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Joined" %}
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                {% trans "Actions" %}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                                {% trans "Loading users..." %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="mt-6 flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    Showing <span id="showing-start">1</span> to <span id="showing-end">10</span> of <span id="total-users">0</span> users
+                </div>
+                <div class="flex space-x-2">
+                    <button id="prev-page" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded" disabled>
+                        {% trans "Previous" %}
+                    </button>
+                    <span id="page-numbers" class="flex space-x-1"></span>
+                    <button id="next-page" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-3 py-1 rounded" disabled>
+                        {% trans "Next" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent User Registrations -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="font-heading font-semibold text-lg text-gray-900">
+                    <i class="fas fa-user-plus mr-2 text-green-500"></i>
+                    {% trans "Recent Registrations" %}
+                </h2>
+            </div>
+            <div class="p-6">
+                <div id="recent-users" class="space-y-4">
+                    <div class="text-center py-4 text-gray-500">
+                        {% trans "Loading recent registrations..." %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Activity -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="font-heading font-semibold text-lg text-gray-900">
+                    <i class="fas fa-activity mr-2 text-blue-500"></i>
+                    {% trans "System Activity" %}
+                </h2>
+            </div>
+            <div class="p-6">
+                <div id="system-activity" class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">{% trans "Server Status" %}</p>
+                            <p class="text-sm text-gray-600">{% trans "System running normally" %}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            {% trans "Online" %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">{% trans "Database" %}</p>
+                            <p class="text-sm text-gray-600">{% trans "All connections healthy" %}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <i class="fas fa-database mr-1"></i>
+                            {% trans "Healthy" %}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">{% trans "Last Backup" %}</p>
+                            <p class="text-sm text-gray-600">{% trans "System backup completed" %}</p>
+                        </div>
+                        <span class="text-xs text-gray-500">{% now "M d, Y H:i" %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Detail Modal -->
+<div id="user-detail-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity" aria-hidden="true"></div>
+        
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            {% trans "User Details" %}
+                        </h3>
+                        <div class="mt-2">
+                            <div id="modal-content">
+                                <!-- User details will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" id="close-modal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    {% trans "Close" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Admin Dashboard JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const refreshUsersBtn = document.getElementById('refresh-users');
+    const userFilter = document.getElementById('user-filter');
+    const selectAllCheckbox = document.getElementById('select-all-users');
+    const selectedCount = document.getElementById('selected-count');
+    const usersTable = document.getElementById('users-table');
+    const usersTbody = document.getElementById('users-tbody');
+    
+    let currentPage = 1;
+    let usersData = [];
+    let filteredUsers = [];
+    
+    // Initialize
+    loadUsers();
+    
+    // Event listeners
+    refreshUsersBtn.addEventListener('click', loadUsers);
+    userFilter.addEventListener('change', filterUsers);
+    selectAllCheckbox.addEventListener('change', toggleSelectAll);
+    
+    // Bulk action buttons
+    document.getElementById('bulk-approve').addEventListener('click', () => bulkAction('approve'));
+    document.getElementById('bulk-reject').addEventListener('click', () => bulkAction('reject'));
+    document.getElementById('bulk-activate').addEventListener('click', () => bulkAction('activate'));
+    document.getElementById('bulk-deactivate').addEventListener('click', () => bulkAction('deactivate'));
+    
+    async function loadUsers() {
+        try {
+            showLoading();
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+            const url = `${baseUrl}/ajax/admin/users/`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                usersData = data.users;
+                filteredUsers = [...usersData];
+                renderUsersTable();
+                loadRecentUsers();
+            } else {
+                showError('Failed to load users');
+            }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            showError('Network error while loading users');
+        }
+    }
+    
+    function showLoading() {
+        usersTbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                    Loading users...
+                </td>
+            </tr>
+        `;
+    }
+    
+    function renderUsersTable() {
+        const startIndex = (currentPage - 1) * 10;
+        const endIndex = startIndex + 10;
+        const pageUsers = filteredUsers.slice(startIndex, endIndex);
+
+        usersTbody.innerHTML = '';
+
+        if (pageUsers.length === 0) {
+            usersTbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                        No users found matching the selected filter.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        pageUsers.forEach(user => {
+            const row = createUserRow(user);
+            usersTbody.appendChild(row);
+        });
+
+        updatePagination();
+        updateBulkActionButtons();
+    }
+
+    function createUserRow(user) {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+
+        const statusBadge = getStatusBadge(user);
+        const typeBadge = getTypeBadge(user);
+        const joinedDate = new Date(user.date_joined).toLocaleDateString();
+
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+                <input type="checkbox" class="user-checkbox form-checkbox h-4 w-4 text-blue-600" value="${user.id}">
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <i class="fas fa-user text-gray-600"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">${user.full_name || user.username}</div>
+                        <div class="text-sm text-gray-500">${user.email}</div>
+                        ${user.phone_number ? `<div class="text-xs text-gray-400">${user.phone_number}</div>` : ''}
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${typeBadge}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${statusBadge}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${joinedDate}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                    <button onclick="viewUserDetails(${user.id})" class="text-blue-600 hover:text-blue-900" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    ${!user.is_active ? `
+                        <button onclick="approveUser(${user.id})" class="text-green-600 hover:text-green-900" title="Approve">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button onclick="rejectUser(${user.id})" class="text-red-600 hover:text-red-900" title="Reject">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    ` : `
+                        <button onclick="deactivateUser(${user.id})" class="text-red-600 hover:text-red-900" title="Deactivate">
+                            <i class="fas fa-user-times"></i>
+                        </button>
+                    `}
+                    <a href="/admin/core/user/${user.id}/change/" target="_blank" class="text-gray-600 hover:text-gray-900" title="Edit in Admin">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </td>
+        `;
+
+        return row;
+    }
+    
+    function getStatusBadge(user) {
+        if (user.is_active) {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <i class="fas fa-check-circle mr-1"></i> Active
+            </span>`;
+        } else {
+            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                <i class="fas fa-clock mr-1"></i> Pending
+            </span>`;
+        }
+    }
+    
+    function getTypeBadge(user) {
+        const typeColors = {
+            'farmer': 'bg-green-100 text-green-800',
+            'expert': 'bg-blue-100 text-blue-800',
+            'admin': 'bg-purple-100 text-purple-800'
+        };
+        
+        const typeIcons = {
+            'farmer': 'fas fa-seedling',
+            'expert': 'fas fa-graduation-cap',
+            'admin': 'fas fa-crown'
+        };
+        
+        const color = typeColors[user.user_type] || 'bg-gray-100 text-gray-800';
+        const icon = typeIcons[user.user_type] || 'fas fa-user';
+        
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${color}">
+            <i class="${icon} mr-1"></i> ${user.user_type_display}
+        </span>`;
+    }
+    
+    function filterUsers() {
+        const filter = userFilter.value;
+        
+        switch (filter) {
+            case 'pending':
+                filteredUsers = usersData.filter(user => !user.is_active);
+                break;
+            case 'farmers':
+                filteredUsers = usersData.filter(user => user.user_type === 'farmer');
+                break;
+            case 'experts':
+                filteredUsers = usersData.filter(user => user.user_type === 'expert');
+                break;
+            case 'admins':
+                filteredUsers = usersData.filter(user => user.user_type === 'admin' || user.is_superuser || user.is_staff);
+                break;
+            case 'active':
+                filteredUsers = usersData.filter(user => user.is_active);
+                break;
+            case 'inactive':
+                filteredUsers = usersData.filter(user => !user.is_active);
+                break;
+            default:
+                filteredUsers = [...usersData];
+        }
+        
+        currentPage = 1;
+        renderUsersTable();
+    }
+    
+    function toggleSelectAll() {
+        const checkboxes = document.querySelectorAll('.user-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        updateSelectedCount();
+    }
+    
+    function updateSelectedCount() {
+        const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+        const count = selectedCheckboxes.length;
+        selectedCount.textContent = `${count} selected`;
+        updateBulkActionButtons();
+    }
+    
+    function updateBulkActionButtons() {
+        const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+        const hasSelection = selectedCheckboxes.length > 0;
+        
+        document.getElementById('bulk-approve').disabled = !hasSelection;
+        document.getElementById('bulk-reject').disabled = !hasSelection;
+        document.getElementById('bulk-activate').disabled = !hasSelection;
+        document.getElementById('bulk-deactivate').disabled = !hasSelection;
+    }
+    
+    // Add event listener for checkboxes
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('user-checkbox')) {
+            updateSelectedCount();
+        }
+    });
+    
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredUsers.length / 10);
+        const start = (currentPage - 1) * 10 + 1;
+        const end = Math.min(currentPage * 10, filteredUsers.length);
+        
+        document.getElementById('showing-start').textContent = start;
+        document.getElementById('showing-end').textContent = end;
+        document.getElementById('total-users').textContent = filteredUsers.length;
+        
+        document.getElementById('prev-page').disabled = currentPage === 1;
+        document.getElementById('next-page').disabled = currentPage === totalPages;
+    }
+    
+    async function bulkAction(action) {
+        const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+            showNotification('Please select users first', 'error');
+            return;
+        }
+        
+        const confirmMessage = `Are you sure you want to ${action} ${selectedIds.length} user(s)?`;
+        if (!confirm(confirmMessage)) return;
+        
+        try {
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+            const url = `${baseUrl}/ajax/admin/users/bulk-action/`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    action: action,
+                    user_ids: selectedIds
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification(`Successfully ${action}d ${data.count} user(s)`, 'success');
+                loadUsers(); // Reload the users list
+            } else {
+                showNotification(data.error || `Failed to ${action} users`, 'error');
+            }
+        } catch (error) {
+            console.error('Error performing bulk action:', error);
+            showNotification('Network error', 'error');
+        }
+    }
+    
+    async function loadRecentUsers() {
+        try {
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+            const url = `${baseUrl}/ajax/admin/users/recent/`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                renderRecentUsers(data.users);
+            }
+        } catch (error) {
+            console.error('Error loading recent users:', error);
+        }
+    }
+    
+    function renderRecentUsers(users) {
+        const container = document.getElementById('recent-users');
+        
+        if (users.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-gray-500">No recent registrations</div>';
+            return;
+        }
+        
+        container.innerHTML = users.map(user => `
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="flex-shrink-0 h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-600 text-sm"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">${user.full_name || user.username}</p>
+                        <p class="text-sm text-gray-600">${user.user_type_display}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-gray-500">${new Date(user.date_joined).toLocaleDateString()}</p>
+                    ${!user.is_active ? '<span class="text-xs text-red-600">Pending</span>' : '<span class="text-xs text-green-600">Active</span>'}
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function showNotification(message, type) {
+        // You can implement a notification system here
+        if (type === 'success') {
+            alert('✅ ' + message);
+        } else {
+            alert('❌ ' + message);
+        }
+    }
+    
+    function showError(message) {
+        usersTbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-red-500">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <b>${message}</b>
+                </td>
+            </tr>
+        `;
+        showNotification(message, 'error');
+    }
+    
+    function getCsrfToken() {
+        const token = document.querySelector('[name=csrfmiddlewaretoken]');
+        return token ? token.value : document.querySelector('input[name="csrfmiddlewaretoken"]')?.value || '';
+    }
+    
+    // Global functions for inline actions
+    window.approveUser = async function(userId) {
+        if (!confirm('Approve this user?')) return;
+        await bulkAction('approve');
+    };
+    
+    window.rejectUser = async function(userId) {
+        if (!confirm('Reject this user? This action cannot be undone.')) return;
+        await bulkAction('reject');
+    };
+    
+    window.deactivateUser = async function(userId) {
+        if (!confirm('Deactivate this user?')) return;
+        await bulkAction('deactivate');
+    };
+    
+    window.viewUserDetails = async function(userId) {
+        try {
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+            const url = `${baseUrl}/ajax/admin/users/${userId}/`;
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken(),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                const user = data.user;
+                const modalContent = document.getElementById('modal-content');
+                
+                if (!modalContent) {
+                    showNotification('Modal content element not found', 'error');
+                    return;
+                }
+                
+                // Build the content using DOM manipulation instead of template literals
+                modalContent.innerHTML = '';
+                
+                // Create main container
+                const container = document.createElement('div');
+                container.className = 'space-y-4';
+                
+                // Basic Information Section
+                const basicInfo = document.createElement('div');
+                basicInfo.className = 'border-b pb-4';
+                basicInfo.innerHTML = `
+                    <h4 class="font-semibold text-gray-900 mb-3">Basic Information</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div><span class="font-medium text-gray-600">Username:</span> <span class="ml-2">${user.username}</span></div>
+                        <div><span class="font-medium text-gray-600">Full Name:</span> <span class="ml-2">${user.full_name || 'N/A'}</span></div>
+                        <div><span class="font-medium text-gray-600">Email:</span> <span class="ml-2">${user.email}</span></div>
+                        <div><span class="font-medium text-gray-600">Phone:</span> <span class="ml-2">${user.phone_number || 'N/A'}</span></div>
+                        <div><span class="font-medium text-gray-600">User Type:</span> <span class="ml-2">${user.user_type_display}</span></div>
+                        <div><span class="font-medium text-gray-600">Status:</span> 
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                ${user.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(basicInfo);
+                
+                // Location Information
+                const locationInfo = document.createElement('div');
+                locationInfo.className = 'border-b pb-4';
+                locationInfo.innerHTML = `
+                    <h4 class="font-semibold text-gray-900 mb-3">Location</h4>
+                    <div class="grid grid-cols-1 gap-4 text-sm">
+                        <div><span class="font-medium text-gray-600">City:</span> <span class="ml-2">${user.city || 'N/A'}</span></div>
+                        <div><span class="font-medium text-gray-600">Address:</span> <span class="ml-2">${user.address || 'N/A'}</span></div>
+                    </div>
+                `;
+                container.appendChild(locationInfo);
+                
+                // Account Information
+                const accountInfo = document.createElement('div');
+                accountInfo.className = 'border-b pb-4';
+                const joinedDate = user.date_joined ? new Date(user.date_joined).toLocaleDateString() : 'N/A';
+                const lastLogin = user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never';
+                accountInfo.innerHTML = `
+                    <h4 class="font-semibold text-gray-900 mb-3">Account Information</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div><span class="font-medium text-gray-600">Joined Date:</span> <span class="ml-2">${joinedDate}</span></div>
+                        <div><span class="font-medium text-gray-600">Last Login:</span> <span class="ml-2">${lastLogin}</span></div>
+                        <div><span class="font-medium text-gray-600">Staff Status:</span> <span class="ml-2">${user.is_staff ? 'Yes' : 'No'}</span></div>
+                        <div><span class="font-medium text-gray-600">Superuser:</span> <span class="ml-2">${user.is_superuser ? 'Yes' : 'No'}</span></div>
+                    </div>
+                `;
+                container.appendChild(accountInfo);
+                
+                // Statistics
+                const stats = document.createElement('div');
+                stats.innerHTML = `
+                    <h4 class="font-semibold text-gray-900 mb-3">Activity Statistics</h4>
+                    <div class="grid grid-cols-3 gap-4 text-sm">
+                        <div class="text-center p-3 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">${user.queries_count || 0}</div>
+                            <div class="text-gray-600">Queries</div>
+                        </div>
+                        <div class="text-center p-3 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">${user.advice_given_count || 0}</div>
+                            <div class="text-gray-600">Advice Given</div>
+                        </div>
+                        <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                            <div class="text-2xl font-bold text-yellow-600">${user.advice_received_count || 0}</div>
+                            <div class="text-gray-600">Advice Received</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(stats);
+                
+                modalContent.appendChild(container);
+                
+                // Add action buttons to the modal footer
+                let modal = document.getElementById('user-detail-modal');
+                const modalFooter = modal.querySelector('.bg-gray-50');
+                
+                const footerContent = document.createElement('div');
+                footerContent.className = 'flex space-x-2';
+                
+                if (!user.is_active) {
+                    footerContent.innerHTML = `
+                        <button onclick="approveUserFromModal(${user.id})" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:text-sm">
+                            <i class="fas fa-check mr-2"></i> Approve
+                        </button>
+                        <button onclick="rejectUserFromModal(${user.id})" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                            <i class="fas fa-times mr-2"></i> Reject
+                        </button>
+                    `;
+                } else {
+                    footerContent.innerHTML = `
+                        <button onclick="deactivateUserFromModal(${user.id})" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                            <i class="fas fa-user-times mr-2"></i> Deactivate
+                        </button>
+                    `;
+                }
+                
+                footerContent.innerHTML += `
+                    <a href="/admin/core/user/${user.id}/change/" target="_blank" class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                        <i class="fas fa-edit mr-2"></i> Edit in Admin
+                    </a>
+                `;
+                
+                const closeButton = document.createElement('button');
+                closeButton.type = 'button';
+                closeButton.id = 'close-modal';
+                closeButton.className = 'mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:mr-3 sm:w-auto sm:text-sm';
+                closeButton.textContent = 'Close';
+                
+                modalFooter.innerHTML = '';
+                modalFooter.appendChild(footerContent);
+                modalFooter.appendChild(closeButton);
+                
+                // Show the modal
+                modal = document.getElementById('user-detail-modal');
+                modal.classList.remove('hidden');
+                
+                // Set up close button event
+                const closeBtn = document.getElementById('close-modal');
+                if (closeBtn) {
+                    closeBtn.onclick = function() {
+                        modal.classList.add('hidden');
+                    };
+                }
+                
+            } else {
+                showNotification(data.error || 'Failed to load user details', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading user details:', error);
+            showNotification('Error loading user details', 'error');
+        }
+    };
+    
+    // Close modal
+    document.getElementById('close-modal').addEventListener('click', function() {
+        document.getElementById('user-detail-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('view-reports').addEventListener('click', function() {
+        const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+        window.open(`${baseUrl}/ajax/admin/report/`, '_blank');
+    });
+
+    // Navigation Widget Events
+    document.getElementById('reports-nav-widget').addEventListener('click', function(e) {
+        e.preventDefault();
+        const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+        window.open(`${baseUrl}/ajax/admin/report/`, '_blank');
+    });
+
+    document.getElementById('analytics-nav-widget').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('view-reports').click();
+    });
+    
+    // Modal action functions
+    window.approveUserFromModal = async function(userId) {
+        if (!confirm('Approve this user?')) return;
+        
+        try {
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+            const url = `${baseUrl}/ajax/admin/users/bulk-action/`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    action: 'approve',
+                    user_ids: [userId.toString()]
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                showNotification('User approved successfully', 'success');
+                document.getElementById('user-detail-modal').classList.add('hidden');
+                loadUsers(); // Refresh the user list
+            } else {
+                showNotification(data.error || 'Failed to approve user', 'error');
+            }
+        } catch (error) {
+            console.error('Error approving user:', error);
+            showNotification('Network error', 'error');
+        }
+    };
+    
+    window.rejectUserFromModal = async function(userId) {
+        if (!confirm('Reject this user? This action cannot be undone.')) return;
+        
+        try {
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+            const url = `${baseUrl}/ajax/admin/users/bulk-action/`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    action: 'reject',
+                    user_ids: [userId.toString()]
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                showNotification('User rejected successfully', 'success');
+                document.getElementById('user-detail-modal').classList.add('hidden');
+                loadUsers(); // Refresh the user list
+            } else {
+                showNotification(data.error || 'Failed to reject user', 'error');
+            }
+        } catch (error) {
+            console.error('Error rejecting user:', error);
+            showNotification('Network error', 'error');
+        }
+    };
+    
+    window.deactivateUserFromModal = async function(userId) {
+        if (!confirm('Deactivate this user?')) return;
+        
+        try {
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+            const url = `${baseUrl}/ajax/admin/users/bulk-action/`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken()
+                },
+                body: JSON.stringify({
+                    action: 'deactivate',
+                    user_ids: [userId.toString()]
+                })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                showNotification('User deactivated successfully', 'success');
+                document.getElementById('user-detail-modal').classList.add('hidden');
+                loadUsers(); // Refresh the user list
+            } else {
+                showNotification(data.error || 'Failed to deactivate user', 'error');
+            }
+        } catch (error) {
+            console.error('Error deactivating user:', error);
+            showNotification('Network error', 'error');
+        }
+    };
+    
+    // Simple test function
+    window.testUserDetails = async function(userId) {
+        try {
+            const baseUrl = window.location.pathname.includes('/en/') ? '/en' : '';
+            const url = `${baseUrl}/ajax/admin/users/${userId}/`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.success) {
+                alert(`SUCCESS! User: ${data.user.username}, Email: ${data.user.email}`);
+            } else {
+                alert(`ERROR: ${data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            alert(`FETCH ERROR: ${error.message}`);
+        }
+    };
+});
+
+// GPS Location Detection and Update
+function updateLocationDisplay(latitude, longitude) {
+    // Reverse geocode using Nominatim
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+        .then(response => response.json())
+        .then(data => {
+            const address = data.address || {};
+            const city = address.city || address.town || address.village || 'Unknown';
+            const state = address.state || '';
+            const country = address.country || '';
+            
+            // Format location display
+            let locationDisplay = `${city}`;
+            if (state) locationDisplay += `, ${state}`;
+            if (country) locationDisplay += `, ${country}`;
+            
+            // Update UI
+            document.getElementById('dashboard-location').textContent = locationDisplay;
+            document.getElementById('dashboard-coordinates').textContent = 
+                `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            
+            console.log(`Location updated: ${locationDisplay}`);
+        })
+        .catch(error => {
+            console.log('Reverse geocoding error:', error);
+            document.getElementById('dashboard-location').textContent = 'Location unavailable';
+            document.getElementById('dashboard-coordinates').textContent = 
+                `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        });
+}
+
+function detectDashboardLocation() {
+    if (!navigator.geolocation) {
+        document.getElementById('dashboard-location').textContent = 'Geolocation not supported';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log(`GPS detected: ${latitude}, ${longitude}`);
+            updateLocationDisplay(latitude, longitude);
+        },
+        (error) => {
+            console.log('Geolocation error:', error.message);
+            document.getElementById('dashboard-location').textContent = 'Location permission denied';
+            document.getElementById('dashboard-coordinates').textContent = 'Please enable location services';
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+// Refresh location button
+document.getElementById('refresh-location-btn').addEventListener('click', () => {
+    document.getElementById('dashboard-location').textContent = 'Detecting location...';
+    document.getElementById('dashboard-coordinates').textContent = 'GPS: Waiting...';
+    detectDashboardLocation();
+});
+
+// Detect location on page load
+detectDashboardLocation();
+</script>
+{% endblock %}

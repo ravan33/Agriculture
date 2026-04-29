@@ -1,0 +1,321 @@
+﻿{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Mandi Prices" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            🏪 {% trans "Mandi Prices" %}</h1>
+        <p class="text-gray-600">
+            {% trans "Latest crop prices from major markets across India" %}
+        </p>
+        <div class="flex items-center mt-2">
+            <div class="text-sm text-gray-500 mr-4">
+                Last updated: <span id="last-updated">{{ market_summary.last_updated }}</span>
+            </div>
+            <button id="refresh-prices" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition-colors">
+                <i class="fas fa-sync-alt mr-1"></i>
+                Refresh Prices
+            </button>
+            <div id="loading-indicator" class="ml-2 hidden">
+                <i class="fas fa-spinner fa-spin text-gray-500"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-full">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Total Crops" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ market_summary.total_crops }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-full">
+                    <span class="text-green-600 text-xl">📈</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Trending Up" %}</p>
+                    <p class="text-2xl font-bold text-green-600">{{ market_summary.trending_up }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-red-100 rounded-full">
+                    <span class="text-red-600 text-xl">📉</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Trending Down" %}</p>
+                    <p class="text-2xl font-bold text-red-600">{{ market_summary.trending_down }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-100 rounded-full">
+                    <span class="text-blue-600 text-xl">➡️</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Stable" %}</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ market_summary.stable }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Trending Crops -->
+    {% if trending_crops %}
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">
+            🔥 {% trans "Top Trending Crops" %}
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {% for crop in trending_crops %}
+            <div class="border border-gray-200 rounded-lg p-4">
+                <h3 class="font-semibold text-gray-900">{{ crop.crop }}</h3>
+                <p class="text-sm text-gray-600">{{ crop.market }}, {{ crop.state }}</p>
+                <div class="flex items-center justify-between mt-2">
+                    <span class="text-lg font-bold text-gray-900">{{ crop.price }}/{{ crop.unit }}</span>
+                    <span class="text-green-600 font-semibold">{{ crop.change }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Market Prices Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">
+                📊 {% trans "Current Market Prices" %}
+            </h2>
+            <p class="text-sm text-gray-600 mt-1">
+                {% trans "Last updated" %}: {{ market_summary.last_updated }}
+            </p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Crop" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Price" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Market" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Date" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Trend" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for price in market_prices %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ price.crop }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-bold text-gray-900">{{ price.price }}</div>
+                            <div class="text-xs text-gray-500">per {{ price.unit }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ price.market }}</div>
+                            <div class="text-xs text-gray-500">{{ price.state }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ price.date }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if price.trend == 'up' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    📈 {{ price.change }}
+                                </span>
+                            {% elif price.trend == 'down' %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    📉 {{ price.change }}
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    ➡️ {{ price.change }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800">
+                    {% trans "Disclaimer" %}
+                </h3>
+                <div class="mt-2 text-sm text-yellow-700">
+                    <p>
+                        {% trans "Prices shown are indicative and may vary. Please verify current rates at your local mandi before making any transactions. This data is for reference purposes only." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Real-time market price functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const refreshBtn = document.getElementById('refresh-prices');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const lastUpdated = document.getElementById('last-updated');
+    
+    // Auto-refresh every 5 minutes
+    setInterval(refreshMarketPrices, 300000);
+    
+    // Manual refresh button
+    refreshBtn.addEventListener('click', refreshMarketPrices);
+    
+    function refreshMarketPrices() {
+        refreshBtn.disabled = true;
+        loadingIndicator.classList.remove('hidden');
+        
+        fetch('{% url "core:market_prices_ajax" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateMarketTable(data.prices);
+                    updateMarketSummary(data.summary);
+                    lastUpdated.textContent = data.last_updated;
+                    
+                    // Show success notification
+                    showNotification('Market prices updated successfully!', 'success');
+                } else {
+                    showNotification('Failed to update market prices. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Network error. Please check your connection.', 'error');
+            })
+            .finally(() => {
+                refreshBtn.disabled = false;
+                loadingIndicator.classList.add('hidden');
+            });
+    }
+    
+    function updateMarketTable(prices) {
+        const tbody = document.querySelector('#market-prices-table tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        prices.forEach(price => {
+            const row = document.createElement('tr');
+            row.className = 'border-b hover:bg-gray-50';
+            
+            const trendIcon = getTrendIcon(price.trend);
+            const trendColor = getTrendColor(price.trend);
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">${price.crop}</div>
+                    <div class="text-sm text-gray-500">${price.state || ''}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-bold text-green-600">${price.price}</div>
+                    <div class="text-xs text-gray-500">per ${price.unit}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${price.market}</div>
+                    <div class="text-xs text-gray-500">${price.date}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${trendColor}">
+                        ${trendIcon} ${price.change}
+                    </span>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    function updateMarketSummary(summary) {
+        // Update summary cards if they exist
+        const totalCropsEl = document.querySelector('[data-summary="total_crops"]');
+        const trendingUpEl = document.querySelector('[data-summary="trending_up"]');
+        const trendingDownEl = document.querySelector('[data-summary="trending_down"]');
+        const stableEl = document.querySelector('[data-summary="stable"]');
+        
+        if (totalCropsEl) totalCropsEl.textContent = summary.total_crops;
+        if (trendingUpEl) trendingUpEl.textContent = summary.trending_up;
+        if (trendingDownEl) trendingDownEl.textContent = summary.trending_down;
+        if (stableEl) stableEl.textContent = summary.stable;
+    }
+    
+    function getTrendIcon(trend) {
+        switch(trend) {
+            case 'up': return '↗️';
+            case 'down': return '↘️';
+            default: return '↔️';
+        }
+    }
+    
+    function getTrendColor(trend) {
+        switch(trend) {
+            case 'up': return 'bg-green-100 text-green-800';
+            case 'down': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    }
+    
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-50 ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}
+

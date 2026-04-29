@@ -1,0 +1,266 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}My Advice -   | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                        <i class="fas fa-lightbulb text-blue-600 mr-2"></i>
+                        My Advice</h2>
+                    <p class="mt-1 text-sm text-gray-500">
+                        View all the advice you have provided to farmers
+                    </p>
+                </div>
+                <div class="flex items-center">
+                    <a href="{% url 'core:dashboard' %}" 
+                       class="text-gray-500 hover:text-gray-700 font-medium">
+                        <i class="fas fa-arrow-left mr-1"></i>
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-comment-dots text-2xl text-blue-500"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Total Advice Given</dt>
+                                <dd class="text-lg font-medium text-gray-900">{{ advice_list|length }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-users text-2xl text-green-500"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Farmers Helped</dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    {% regroup advice_list by query.farmer as grouped_advice %}
+                                    {{ grouped_advice|length }}
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-star text-2xl text-yellow-500"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">Average Rating</dt>
+                                <dd class="text-lg font-medium text-gray-900">
+                                    <span class="text-yellow-500">★★★★☆</span> 4.2
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advice List -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            {% if advice_list %}
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                        Your Advice History
+                    </h3>
+                </div>
+                <ul class="divide-y divide-gray-200">
+                    {% for advice in advice_list %}
+                        <li class="px-6 py-6 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1 min-w-0">
+                                    <!-- Query Title -->
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="text-lg font-medium text-gray-900 truncate">
+                                            {{ advice.query.title }}
+                                        </h4>
+                                        <div class="ml-2 flex-shrink-0">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                {{ advice.created_at|date:"M d, Y" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Farmer Info -->
+                                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                                        <i class="fas fa-user mr-1"></i>
+                                        <span class="font-medium">{{ advice.query.farmer.get_full_name|default:advice.query.farmer.username }}</span>
+                                        <span class="mx-2">•</span>
+                                        <span class="inline-flex items-center">
+                                            <i class="fas fa-seedling mr-1 text-green-500"></i>
+                                            Farmer
+                                        </span>
+                                    </div>
+
+                                    <!-- Query Description -->
+                                    <div class="mt-3">
+                                        <p class="text-sm text-gray-600">
+                                            <strong>Question:</strong> {{ advice.query.description|truncatewords:20 }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Your Advice -->
+                                    <div class="mt-3 bg-blue-50 rounded-lg p-3">
+                                        <p class="text-sm text-gray-700">
+                                            <strong class="text-blue-700">Your Advice:</strong><br>
+                                            {{ advice.content|truncatewords:30 }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="mt-3 flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            {% if advice.rating_set.exists %}
+                                                <div class="flex items-center">
+                                                    <span class="text-yellow-500">
+                                                        {% with advice.rating_set.first.score as score %}
+                                                            {% for i in "12345"|make_list %}
+                                                                {% if forloop.counter <= score %}★{% else %}☆{% endif %}
+                                                            {% endfor %}
+                                                        {% endwith %}
+                                                    </span>
+                                                    <span class="ml-2 text-sm text-gray-600">
+                                                        {{ advice.rating_set.first.score }}/5
+                                                        {% if advice.rating_set.first.comment %}
+                                                            - "{{ advice.rating_set.first.comment|truncatewords:10 }}"
+                                                        {% endif %}
+                                                    </span>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-sm text-gray-400 italic">No rating yet</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="flex space-x-2">
+                                            <a href="{% url 'core:query_detail' advice.query.id %}" 
+                                               class="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                <i class="fas fa-eye mr-1"></i>
+                                                View Full
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}" 
+                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Previous
+                                </a>
+                            {% endif %}
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}" 
+                                   class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                    Next
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700">
+                                    Showing <span class="font-medium">{{ page_obj.start_index }}</span> to 
+                                    <span class="font-medium">{{ page_obj.end_index }}</span> of 
+                                    <span class="font-medium">{{ page_obj.paginator.count }}</span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                    {% if page_obj.has_previous %}
+                                        <a href="?page={{ page_obj.previous_page_number }}" 
+                                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                                {{ num }}
+                                            </span>
+                                        {% else %}
+                                            <a href="?page={{ num }}" 
+                                               class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                                {{ num }}
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    {% if page_obj.has_next %}
+                                        <a href="?page={{ page_obj.next_page_number }}" 
+                                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    {% endif %}
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+                
+            {% else %}
+                <!-- Empty State -->
+                <div class="text-center py-12">
+                    <div class="flex justify-center">
+                        <i class="fas fa-comment-slash text-6xl text-gray-300"></i>
+                    </div>
+                    <h3 class="mt-4 text-lg font-medium text-gray-900">No advice provided yet</h3>
+                    <p class="mt-2 text-sm text-gray-500">
+                        You haven't provided any advice to farmers yet. Start helping farmers by answering their queries!
+                    </p>
+                    <div class="mt-6">
+                        <a href="{% url 'core:pending_queries' %}" 
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-eye mr-2"></i>
+                            View Pending Queries
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
+{% endblock %}
+

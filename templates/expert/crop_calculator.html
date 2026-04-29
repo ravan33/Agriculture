@@ -1,0 +1,369 @@
+﻿{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="font-heading font-bold text-3xl text-gray-900 mb-2">
+                    <i class="fas fa-calculator text-green-500 mr-3"></i>
+                    {% trans "Crop Calculator" %}</h1>
+                <p class="text-gray-600">{% trans "Calculate fertilizer requirements, seed rates, and expected yields for different crops" %}</p>
+            </div>
+            <a href="{% url 'core:dashboard' %}" 
+               class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 transition duration-300">
+                <i class="fas fa-arrow-left mr-2"></i>
+                {% trans "Back to Dashboard" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Input Form -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="font-semibold text-xl text-gray-900 mb-6">
+                <i class="fas fa-seedling mr-2 text-green-500"></i>
+                {% trans "Crop Information" %}
+            </h2>
+            
+            <form id="crop-calculator-form" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Crop Type -->
+                <div>
+                    <label for="crop-type" class="block text-sm font-medium text-gray-700 mb-2">
+                        {% trans "Select Crop Type" %} <span class="text-red-500">*</span>
+                    </label>
+                    <select id="crop-type" name="crop_type" required
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                        <option value="">{% trans "Choose a crop..." %}</option>
+                        {% for crop in crop_types %}
+                        <option value="{{ crop.name }}">{{ crop.name }} ({{ crop.hindi }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Area -->
+                <div>
+                    <label for="area" class="block text-sm font-medium text-gray-700 mb-2">
+                        {% trans "Cultivated Area (in Acres)" %} <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" id="area" name="area" step="0.1" min="0.1" required
+                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500"
+                           placeholder="{% trans 'Enter area in acres' %}">
+                    <p class="text-xs text-gray-500 mt-1">{% trans "1 acre = 4047 square meters" %}</p>
+                </div>
+
+                <!-- Soil Type -->
+                <div>
+                    <label for="soil-type" class="block text-sm font-medium text-gray-700 mb-2">
+                        {% trans "Soil Type" %}
+                    </label>
+                    <select id="soil-type" name="soil_type"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                        <option value="loamy">{% trans "Loamy Soil ( )" %}</option>
+                        <option value="sandy">{% trans "Sandy Soil ( )" %}</option>
+                        <option value="clay">{% trans "Clay Soil ( )" %}</option>
+                        <option value="black">{% trans "Black Soil ( )" %}</option>
+                    </select>
+                </div>
+
+                <!-- Season -->
+                <div>
+                    <label for="season" class="block text-sm font-medium text-gray-700 mb-2">
+                        {% trans "Growing Season" %}
+                    </label>
+                    <select id="season" name="season"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-green-500 focus:border-green-500">
+                        <option value="kharif">{% trans "Kharif () - Monsoon Season" %}</option>
+                        <option value="rabi">{% trans "Rabi () - Winter Season" %}</option>
+                        <option value="zaid">{% trans "Zaid () - Summer Season" %}</option>
+                    </select>
+                </div>
+
+                <!-- Calculate Button -->
+                <div class="pt-4">
+                    <button type="submit" 
+                            class="w-full bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition duration-300 font-medium">
+                        <i class="fas fa-calculator mr-2"></i>
+                        {% trans "Calculate Requirements" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="font-semibold text-xl text-gray-900 mb-6">
+                <i class="fas fa-chart-line mr-2 text-blue-500"></i>
+                {% trans "Calculation Results" %}
+            </h2>
+
+            <!-- Default Message -->
+            <div id="default-results" class="text-center py-12">
+                <div class="text-gray-400 mb-4">
+                    <i class="fas fa-chart-bar text-6xl"></i>
+                </div>
+                <h3 class="font-semibold text-lg text-gray-600 mb-2">
+                    {% trans "Enter crop details to see calculations" %}
+                </h3>
+                <p class="text-gray-500">
+                    {% trans "Fill in the form on the left to get detailed fertilizer requirements and yield estimates" %}
+                </p>
+            </div>
+
+            <!-- Results Display -->
+            <div id="calculation-results" style="display: none;">
+                <!-- Seed Requirements -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3">
+                        <i class="fas fa-seedling mr-2 text-green-500"></i>
+                        {% trans "Seed Requirements" %}
+                    </h3>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="text-2xl font-bold text-green-700" id="seed-requirement">-</div>
+                        <div class="text-sm text-gray-600">{% trans "Total seed required (kg)" %}</div>
+                    </div>
+                </div>
+
+                <!-- Fertilizer Requirements -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3">
+                        <i class="fas fa-flask mr-2 text-blue-500"></i>
+                        {% trans "Fertilizer Requirements" %}
+                    </h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+                            <div class="text-xl font-bold text-blue-700" id="nitrogen-req">-</div>
+                            <div class="text-xs text-gray-600">{% trans "Nitrogen (kg)" %}</div>
+                        </div>
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 text-center">
+                            <div class="text-xl font-bold text-purple-700" id="phosphorus-req">-</div>
+                            <div class="text-xs text-gray-600">{% trans "Phosphorus (kg)" %}</div>
+                        </div>
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                            <div class="text-xl font-bold text-orange-700" id="potash-req">-</div>
+                            <div class="text-xs text-gray-600">{% trans "Potash (kg)" %}</div>
+                        </div>
+                        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-center">
+                            <div class="text-xl font-bold text-indigo-700" id="total-fertilizer">-</div>
+                            <div class="text-xs text-gray-600">{% trans "Total (kg)" %}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Commercial Fertilizers -->
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                        <h4 class="font-medium text-gray-800 mb-2">{% trans "Commercial Fertilizers:" %}</h4>
+                        <div class="grid grid-cols-3 gap-3 text-sm">
+                            <div>
+                                <span class="font-medium">{% trans "Urea:" %}</span>
+                                <span id="urea-req" class="text-blue-600">-</span> kg
+                            </div>
+                            <div>
+                                <span class="font-medium">{% trans "DAP:" %}</span>
+                                <span id="dap-req" class="text-purple-600">-</span> kg
+                            </div>
+                            <div>
+                                <span class="font-medium">{% trans "MOP:" %}</span>
+                                <span id="mop-req" class="text-orange-600">-</span> kg
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Yield & Economics -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3">
+                        <i class="fas fa-chart-line mr-2 text-yellow-500"></i>
+                        {% trans "Expected Yield & Economics" %}
+                    </h3>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-xl font-bold text-yellow-700" id="expected-yield">-</div>
+                                    <div class="text-sm text-gray-600">{% trans "Expected yield (kg)" %}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-semibold text-green-700" id="estimated-cost">-</div>
+                                    <div class="text-sm text-gray-600">{% trans "Input cost (₹)" %}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3">
+                        <i class="fas fa-lightbulb mr-2 text-green-500"></i>
+                        {% trans "Expert Recommendations" %}
+                    </h3>
+                    <div id="recommendations-list" class="space-y-2">
+                        <!-- Recommendations will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Export Button -->
+                <div class="text-center">
+                    <button onclick="exportCalculations()" 
+                            class="bg-indigo-600 text-white px-6 py-2 rounded-md hover:bg-indigo-700 transition duration-300">
+                        <i class="fas fa-download mr-2"></i>
+                        {% trans "Export Results" %}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-calculations" style="display: none;" class="text-center py-12">
+                <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
+                <p class="text-gray-600">{% trans "Calculating requirements..." %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentCalculations = null;
+
+document.getElementById('crop-calculator-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = {
+        crop_type: formData.get('crop_type'),
+        area: parseFloat(formData.get('area')),
+        soil_type: formData.get('soil_type'),
+        season: formData.get('season')
+    };
+    
+    if (!data.crop_type || !data.area || data.area <= 0) {
+        alert('{% trans "Please fill in all required fields correctly." %}');
+        return;
+    }
+    
+    calculateCropRequirements(data);
+});
+
+function calculateCropRequirements(data) {
+    // Show loading state
+    document.getElementById('default-results').style.display = 'none';
+    document.getElementById('calculation-results').style.display = 'none';
+    document.getElementById('loading-calculations').style.display = 'block';
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                     document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+                     '{{ csrf_token }}';
+    
+    fetch('{% url "core:expert_crop_calculator_ajax" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(result => {
+        if (result.success) {
+            displayCalculationResults(result);
+        } else {
+            console.error('Calculation error:', result.error);
+            alert(result.error || '{% trans "Calculation failed. Please try again." %}');
+            document.getElementById('loading-calculations').style.display = 'none';
+            document.getElementById('default-results').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('{% trans "Error performing calculations. Please try again." %} - ' + error.message);
+        document.getElementById('loading-calculations').style.display = 'none';
+        document.getElementById('default-results').style.display = 'block';
+    });
+}
+
+function displayCalculationResults(result) {
+    currentCalculations = result;
+    const calc = result.calculations;
+    
+    // Hide loading, show results
+    document.getElementById('loading-calculations').style.display = 'none';
+    document.getElementById('calculation-results').style.display = 'block';
+    
+    // Update seed requirements
+    document.getElementById('seed-requirement').textContent = calc.seed_requirement.toFixed(1);
+    
+    // Update fertilizer requirements
+    document.getElementById('nitrogen-req').textContent = calc.fertilizer_requirements.nitrogen.toFixed(1);
+    document.getElementById('phosphorus-req').textContent = calc.fertilizer_requirements.phosphorus.toFixed(1);
+    document.getElementById('potash-req').textContent = calc.fertilizer_requirements.potash.toFixed(1);
+    
+    const totalFertilizer = calc.fertilizer_requirements.nitrogen + 
+                           calc.fertilizer_requirements.phosphorus + 
+                           calc.fertilizer_requirements.potash;
+    document.getElementById('total-fertilizer').textContent = totalFertilizer.toFixed(1);
+    
+    // Update commercial fertilizers
+    document.getElementById('urea-req').textContent = calc.fertilizer_requirements.urea.toFixed(1);
+    document.getElementById('dap-req').textContent = calc.fertilizer_requirements.dap.toFixed(1);
+    document.getElementById('mop-req').textContent = calc.fertilizer_requirements.mop.toFixed(1);
+    
+    // Update yield and economics
+    document.getElementById('expected-yield').textContent = calc.expected_yield.toLocaleString();
+    document.getElementById('estimated-cost').textContent = '₹' + calc.estimated_cost.total.toLocaleString();
+    
+    // Update recommendations
+    const recommendationsList = document.getElementById('recommendations-list');
+    recommendationsList.innerHTML = '';
+    
+    result.recommendations.forEach(rec => {
+        const div = document.createElement('div');
+        div.className = 'flex items-start bg-green-50 border border-green-200 rounded-lg p-3';
+        div.innerHTML = `
+            <i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+            <span class="text-sm text-gray-700">${rec}</span>
+        `;
+        recommendationsList.appendChild(div);
+    });
+}
+
+function exportCalculations() {
+    if (!currentCalculations) {
+        alert('{% trans "No calculations to export. Please calculate first." %}');
+        return;
+    }
+    
+    const exportData = {
+        crop_info: {
+            crop_type: currentCalculations.crop_type,
+            area: currentCalculations.area,
+            soil_type: currentCalculations.soil_type,
+            season: currentCalculations.season
+        },
+        calculations: currentCalculations.calculations,
+        recommendations: currentCalculations.recommendations,
+        generated_on: new Date().toISOString(),
+        generated_by: '{{ user.get_full_name|default:user.username }}'
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `crop_calculation_${currentCalculations.crop_type}_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}
+

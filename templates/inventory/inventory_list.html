@@ -1,0 +1,257 @@
+﻿{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Mera Stock" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                📦 {% trans "Mera Stock" %}</h1>
+            <p class="text-gray-600">
+                {% trans "Manage your farm supplies and inventory" %}
+            </p>
+        </div>
+        <a href="{% url 'core:inventory_create' %}" 
+           class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            {% trans "Add New Item" %}
+        </a>
+    </div>
+
+    {% if inventory_items %}
+    <!-- Inventory Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-full">
+                    <span class="text-green-600 text-xl">🌱</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Seeds" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">
+                        {{ inventory_items|length|add:"0" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-100 rounded-full">
+                    <span class="text-blue-600 text-xl">🧪</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Fertilizers" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-red-100 rounded-full">
+                    <span class="text-red-600 text-xl">🏥</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Pesticides" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4">
+            <div class="flex items-center">
+                <div class="p-2 bg-purple-100 rounded-full">
+                    <span class="text-purple-600 text-xl">🔧</span>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">{% trans "Tools" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">
+                📊 {% trans "Inventory Items" %}
+            </h2>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Item Name" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Quantity" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Category" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Last Updated" %}
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Actions" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in inventory_items %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                        {% if item.category == 'seeds' %}
+                                            <span class="text-green-600">🌱</span>
+                                        {% elif item.category == 'fertilizers' %}
+                                            <span class="text-blue-600">🧪</span>
+                                        {% elif item.category == 'pesticides' %}
+                                            <span class="text-red-600">🏥</span>
+                                        {% elif item.category == 'tools' %}
+                                            <span class="text-purple-600">🔧</span>
+                                        {% else %}
+                                            <span class="text-gray-600">📦</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-bold text-gray-900">{{ item.quantity }} {{ item.unit }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {% if item.category == 'seeds' %}bg-green-100 text-green-800
+                                {% elif item.category == 'fertilizers' %}bg-blue-100 text-blue-800
+                                {% elif item.category == 'pesticides' %}bg-red-100 text-red-800
+                                {% elif item.category == 'tools' %}bg-purple-100 text-purple-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ item.get_category_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ item.last_updated|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="{% url 'core:inventory_update' item.pk %}" 
+                                   class="text-indigo-600 hover:text-indigo-900">
+                                    {% trans "Edit" %}
+                                </a>
+                                <a href="{% url 'core:inventory_delete' item.pk %}" 
+                                   class="text-red-600 hover:text-red-900">
+                                    {% trans "Delete" %}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="mt-6">
+        <nav class="flex items-center justify-between">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        {% trans "Previous" %}
+                    </a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" 
+                       class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        {% trans "Next" %}
+                    </a>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        {% trans "Showing" %}
+                        <span class="font-medium">{{ page_obj.start_index }}</span>
+                        {% trans "to" %}
+                        <span class="font-medium">{{ page_obj.end_index }}</span>
+                        {% trans "of" %}
+                        <span class="font-medium">{{ paginator.count }}</span>
+                        {% trans "results" %}
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">{% trans "Previous" %}</span>
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        {% endif %}
+                        
+                        {% for num in paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-green-50 text-sm font-medium text-green-600">
+                                    {{ num }}
+                                </span>
+                            {% else %}
+                                <a href="?page={{ num }}" 
+                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    {{ num }}
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <span class="sr-only">{% trans "Next" %}</span>
+                                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </nav>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-white rounded-lg shadow-md p-8 text-center">
+        <div class="text-gray-400 text-6xl mb-4">📦</div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">{% trans "No Inventory Items Yet" %}</h3>
+        <p class="text-gray-600 mb-4">
+            {% trans "Start managing your farm supplies by adding your first inventory item." %}
+        </p>
+        <a href="{% url 'core:inventory_create' %}" 
+           class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            {% trans "Add Your First Item" %}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,1217 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} | {% trans "AgriVision AI" %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    html, body {
+        height: 100dvh;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    /* Remove base.html styling for full chatgpt-like layout */
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    main {
+        flex: 1;
+        min-height: 0;
+        height: calc(100dvh - 4rem); /* navbar is h-16 (4rem) */
+        overflow: hidden;
+    }
+
+    .chatbot-container {
+        display: flex;
+        flex: 1;
+        height: 100%;
+        background: #fff;
+        overflow: hidden;
+    }
+
+    /* Sidebar */
+    .chatbot-sidebar {
+        width: 260px;
+        background: #f7f7f7;
+        border-right: 1px solid #d9d9d9;
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        overflow-y: auto;
+        height: 100%;
+    }
+
+    .sidebar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .new-chat-btn {
+        background: #f7f7f7;
+        border: 1px solid #d9d9d9;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background 0.2s;
+        color: #565869;
+        font-weight: 500;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .new-chat-btn:hover {
+        background: #ececf1;
+    }
+
+    .sidebar-toggle {
+        display: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.25rem;
+    }
+
+    .chat-history-list {
+        flex: 1;
+        margin-top: 1rem;
+    }
+
+    .chat-history-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: transparent;
+        border: none;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        text-align: left;
+        font-size: 0.875rem;
+        color: #565869;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        transition: background 0.2s;
+        display: block;
+        width: 100%;
+    }
+
+    .chat-history-item:hover {
+        background: #ececf1;
+    }
+
+    /* Main chat area */
+    .chatbot-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .chatbot-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #d9d9d9;
+        background: #f7f7f7;
+    }
+
+    .header-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .header-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .control-select {
+        border: 1px solid #d9d9d9;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        background: #fff;
+        cursor: pointer;
+    }
+
+    /* Chat messages */
+    .chat-messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-height: 0;
+    }
+
+    .message-wrapper {
+        display: flex;
+        margin-bottom: 0.5rem;
+    }
+
+    .message-wrapper.user {
+        justify-content: flex-end;
+    }
+
+    .message-wrapper.assistant {
+        justify-content: flex-start;
+    }
+
+    .message-content {
+        max-width: 70%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        line-height: 1.5;
+        word-wrap: break-word;
+    }
+
+    .message-content.user {
+        background: linear-gradient(135deg, #16a34a, #0f766e);
+        color: #fff;
+        border-bottom-right-radius: 0.25rem;
+    }
+
+    .message-content.assistant {
+        background: #f3f3f3;
+        color: #0f172a;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    /* Input area */
+    .chatbot-input-area {
+        position: sticky;
+        bottom: 0;
+        padding: 1rem 1.5rem 1.5rem 1.5rem;
+        background: #fff;
+        border-top: 1px solid #d9d9d9;
+        flex-shrink: 0;
+        z-index: 5;
+    }
+
+    .input-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+    }
+
+    .input-controls {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        gap: 0.5rem;
+    }
+
+    .main-input-wrapper {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .chat-input-text {
+        flex: 1;
+        border: 1px solid #d9d9d9;
+        border-radius: 0.375rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        resize: none;
+        max-height: 100px;
+        font-family: inherit;
+    }
+
+    .chat-input-text:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.1);
+    }
+
+    .mic-button {
+        padding: 0.75rem;
+        border: 1px solid #d9d9d9;
+        background: #fff;
+        color: #16a34a;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        font-size: 1rem;
+    }
+
+    .mic-button:hover:not(.recording) {
+        background: #f7f7f7;
+        border-color: #10b981;
+    }
+
+    .mic-button.recording {
+        background: #fecaca;
+        border-color: #ef4444;
+        color: #ef4444;
+        animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .send-button {
+        background: #fff;
+        border: 1px solid #d9d9d9;
+        color: #16a34a;
+        padding: 0.75rem;
+        border-radius: 0.375rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        font-size: 1rem;
+    }
+
+    .send-button:hover {
+        background: #f7f7f7;
+        border-color: #10b981;
+    }
+
+    .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .transcript-display {
+        background: #f0fdf4;
+        border: 1px solid #dcfce7;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        color: #166534;
+        display: none;
+    }
+
+    .transcript-display.active {
+        display: block;
+    }
+
+    .voice-status {
+        font-size: 0.75rem;
+        color: #666;
+    }
+
+    /* Weather widget */
+    .weather-widget {
+        background: linear-gradient(to right, #ecfdf5, #f0fdf4);
+        border: 1px solid #d1fae5;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .weather-widget.show {
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .chatbot-sidebar {
+            width: 0;
+            padding: 0;
+            border-right: none;
+            position: absolute;
+            height: 100%;
+            z-index: 50;
+            overflow: hidden;
+            transition: width 0.3s;
+        }
+
+        .chatbot-sidebar.open {
+            width: 260px;
+            padding: 1rem;
+        }
+
+        .sidebar-toggle {
+            display: block;
+        }
+
+        .message-content {
+            max-width: 90%;
+        }
+
+        .header-controls {
+            gap: 0.5rem;
+        }
+
+        .control-select {
+            font-size: 0.7rem;
+            padding: 0.4rem 0.5rem;
+        }
+    }
+
+    /* Scrollbar styling */
+    .chat-messages-container::-webkit-scrollbar,
+    .chatbot-sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .chat-messages-container::-webkit-scrollbar-track,
+    .chatbot-sidebar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .chat-messages-container::-webkit-scrollbar-thumb,
+    .chatbot-sidebar::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+
+    .chatbot-container::-webkit-scrollbar-thumb:hover,
+    .chatbot-sidebar::-webkit-scrollbar-thumb:hover {
+        background: #999;
+    }
+
+    /* Hide base.html footer in chatbot page */
+    footer {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chatbot-container">
+    <!-- Sidebar -->
+    <div class="chatbot-sidebar" id="chatbot-sidebar">
+        <div class="sidebar-header">
+            <strong>Chat History</strong>
+            <button class="sidebar-toggle" id="sidebar-close" title="Close sidebar">✕</button>
+        </div>
+        <button class="new-chat-btn" id="new-chat-btn" title="Start a new conversation">
+            ➕ New Chat
+        </button>
+        <div class="chat-history-list" id="chat-history-list">
+            <!-- Chat history items will be added here dynamically -->
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="chatbot-main">
+        <!-- Header -->
+        <div class="chatbot-header">
+            <button class="sidebar-toggle" id="sidebar-open" title="Open sidebar">☰</button>
+            <h1 class="header-title">Smart Farming Assistant</h1>
+            <div class="header-controls">
+                <select id="input-language" class="control-select" title="Select input language">
+                    <option value="en-US">English</option>
+                    <option value="hi-IN">हिंदी</option>
+                    <option value="te-IN">తెలుగు</option>
+                    <option value="ta-IN">தமிழ்</option>
+                    <option value="mr-IN">मराठी</option>
+                    <option value="bn-IN">বাংলা</option>
+                    <option value="gu-IN">ગુજરાતી</option>
+                    <option value="kn-IN">ಕನ್ನಡ</option>
+                    <option value="pa-IN">ਪੰਜਾਬੀ</option>
+                </select>
+                <select id="market-region" class="control-select" title="Select market region">
+                    <optgroup label="Region">
+                        <option value="india">All India</option>
+                        <option value="maharashtra">Maharashtra</option>
+                        <option value="karnataka">Karnataka</option>
+                        <option value="tamil_nadu">Tamil Nadu</option>
+                        <option value="telangana">Telangana</option>
+                        <option value="punjab">Punjab</option>
+                        <option value="haryana">Haryana</option>
+                        <option value="uttar_pradesh">UP</option>
+                        <option value="west_bengal">West Bengal</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <!-- Chat Messages (Scrollable, takes flex:1) -->
+        <div class="chat-messages-container" id="chat-history">
+            <div class="message-wrapper assistant">
+                <div class="message-content assistant">
+                    👋 Hello! I'm your Smart Farming Assistant. Ask me about crop disease, irrigation, pest control, fertilizer planning, weather, and market prices.
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area (Bottom, fixed) -->
+        <div class="chatbot-input-area">
+            <div class="input-wrapper">
+                <div class="input-controls">
+                    <div id="transcript-display" class="transcript-display">
+                        <strong>🎤 Listening:</strong> <span id="transcript-text"></span>
+                    </div>
+                    <div class="main-input-wrapper">
+                        <form id="chat-form" style="display: flex; gap: 0.75rem; flex: 1;">
+                            {% csrf_token %}
+                            <textarea
+                                id="chat-input"
+                                class="chat-input-text"
+                                placeholder="Type here or click 🎤 to speak... (Press Enter to send)"
+                                rows="1"
+                                autocomplete="off"
+                            ></textarea>
+                            <button type="button" id="mic-button" class="mic-button" title="Click to use voice (Ctrl+M) - Speak naturally and pause, it will auto-submit">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button type="submit" class="send-button" title="Send message (Enter)">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div id="voice-status" class="voice-status" style="text-align: center;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatHistory = document.getElementById('chat-history');
+    const marketRegion = document.getElementById('market-region');
+    const inputLanguage = document.getElementById('input-language');
+    const micButton = document.getElementById('mic-button');
+    const transcriptDisplay = document.getElementById('transcript-display');
+    const transcriptText = document.getElementById('transcript-text');
+    const voiceStatus = document.getElementById('voice-status');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Language codes mapping
+    const languageMap = {
+        'en-US': 'en',
+        'hi-IN': 'hi',
+        'te-IN': 'te',
+        'ta-IN': 'ta',
+        'mr-IN': 'mr',
+        'bn-IN': 'bn',
+        'gu-IN': 'gu',
+        'kn-IN': 'kn',
+        'pa-IN': 'pa'
+    };
+
+    // GPS Auto-Location Detection
+    function detectChatbotLocation() {
+        if (!navigator.geolocation) {
+            console.log('Geolocation not supported');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                console.log(`Location detected: ${latitude}, ${longitude}`);
+                
+                // Reverse geocode using Nominatim (OpenStreetMap)
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const address = data.address || {};
+                        const country = address.country || '';
+                        const state = address.state || '';
+                        const county = address.county || '';
+                        
+                        console.log(`Location: ${country}, ${state}, ${county}`);
+                        
+                        // Auto-select market region based on country and state
+                        let detectedRegion = 'india'; // default
+                        let locationDisplay = country;
+                        
+                        if (country.toLowerCase().includes('united states') || country.toLowerCase().includes('usa')) {
+                            detectedRegion = 'us';
+                            locationDisplay = state + ', USA';
+                        } else if (country.toLowerCase().includes('united kingdom') || country.toLowerCase().includes('uk')) {
+                            detectedRegion = 'uk';
+                            locationDisplay = state + ', UK';
+                        } else if (country.toLowerCase().includes('india')) {
+                            // Detect specific Indian state
+                            const stateMap = {
+                                'maharashtra': 'maharashtra',
+                                'karnataka': 'karnataka',
+                                'tamil nadu': 'tamil_nadu',
+                                'telangana': 'telangana',
+                                'andhra pradesh': 'telangana',
+                                'punjab': 'punjab',
+                                'haryana': 'haryana',
+                                'uttar pradesh': 'uttar_pradesh',
+                                'west bengal': 'west_bengal',
+                                'delhi': 'haryana',
+                                'jammu and kashmir': 'punjab',
+                                'himachal pradesh': 'punjab',
+                                'uttarakhand': 'uttar_pradesh',
+                                'madhya pradesh': 'uttar_pradesh',
+                                'rajasthan': 'haryana',
+                                'chattisgarh': 'telangana',
+                                'jharkhand': 'west_bengal',
+                                'odisha': 'east',
+                                'assam': 'east',
+                                'meghalaya': 'east',
+                                'tripura': 'east',
+                                'manipur': 'east',
+                                'mizoram': 'south',
+                                'nagaland': 'east',
+                                'arunachal pradesh': 'east',
+                                'goa': 'maharashtra',
+                                'kerala': 'tamil_nadu',
+                                'gujarat': 'west',
+                                'rajasthan': 'west',
+                            };
+                            
+                            const stateLower = state.toLowerCase();
+                            if (stateMap[stateLower]) {
+                                detectedRegion = stateMap[stateLower];
+                            } else {
+                                // Fallback to general regions
+                                if (latitude > 28) {
+                                    detectedRegion = 'india-north';
+                                } else if (latitude < 13) {
+                                    detectedRegion = 'india-south';
+                                } else if (longitude < 77) {
+                                    detectedRegion = 'india-west';
+                                } else {
+                                    detectedRegion = 'india-east';
+                                }
+                            }
+                            
+                            locationDisplay = `${state}, India`;
+                        }
+                        
+                        // Update market region dropdown
+                        const option = document.querySelector(`#market-region option[value="${detectedRegion}"]`);
+                        if (option) {
+                            marketRegion.value = detectedRegion;
+                        } else {
+                            marketRegion.value = 'india';
+                        }
+                        
+                        // Update location info display
+                        const locationText = document.getElementById('chatbot-location-text');
+                        if (locationText) {
+                            locationText.innerHTML = `✓ ${locationDisplay} | GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                        }
+                        
+                        // Fetch weather for the detected location
+                        fetchWeatherByGPS(latitude, longitude);
+                    })
+                    .catch(error => {
+                        console.log('Reverse geocoding failed:', error);
+                        // Show coordinates even if reverse geocoding fails
+                        const locationText = document.getElementById('chatbot-location-text');
+                        if (locationText) {
+                            locationText.innerHTML = `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)} (Unable to determine exact location)`;
+                        }
+                        // Fallback: set to India as default for agricultural app
+                        marketRegion.value = 'india';
+                        fetchWeatherByGPS(latitude, longitude);
+                    });
+            },
+            (error) => {
+                console.log('Geolocation error:', error.message);
+                const locationText = document.getElementById('chatbot-location-text');
+                if (locationText) {
+                    locationText.innerHTML = `⚠️ ${error.message} - Please enable location services`;
+                }
+                // Fallback to India as default
+                marketRegion.value = 'india';
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    // Fetch weather data based on GPS coordinates
+    function fetchWeatherByGPS(latitude, longitude) {
+        // Update weather location display with GPS coordinates (with null checks)
+        const weatherLocation = document.getElementById('weather-location');
+        const weatherCoordinates = document.getElementById('weather-coordinates');
+        
+        if (weatherLocation) {
+            weatherLocation.textContent = `GPS Detected: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        }
+        if (weatherCoordinates) {
+            weatherCoordinates.textContent = `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        }
+        
+        fetch('/ajax/weather/gps/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                latitude: latitude,
+                longitude: longitude
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.weather) {
+                const weather = data.weather;
+                const weatherWidget = document.getElementById('weather-widget');
+                
+                // Update weather location with full address (with null checks)
+                if (weatherLocation) {
+                    weatherLocation.textContent = `${weather.city || 'Location'}, ${weather.state || weather.country}`;
+                }
+                if (weatherCoordinates) {
+                    weatherCoordinates.textContent = `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                }
+                
+                // Update weather display (with null checks)
+                const weatherTemp = document.getElementById('weather-temp');
+                const weatherCondition = document.getElementById('weather-condition');
+                const weatherConditionFull = document.getElementById('weather-condition-full');
+                const weatherWind = document.getElementById('weather-wind');
+                const weatherHumidity = document.getElementById('weather-humidity');
+                const weatherIcon = document.getElementById('weather-icon');
+                const adviceDiv = document.getElementById('weather-advice');
+                
+                if (weatherTemp) weatherTemp.textContent = `${weather.temperature}°C`;
+                if (weatherCondition) weatherCondition.textContent = weather.condition;
+                if (weatherConditionFull) weatherConditionFull.textContent = weather.description || weather.condition;
+                if (weatherWind) weatherWind.textContent = `${weather.wind_speed.toFixed(2)} m/s`;
+                if (weatherHumidity) weatherHumidity.textContent = `${weather.humidity}%`;
+                if (weatherIcon) weatherIcon.textContent = data.icon || '🌤️';
+                
+                // Update farming advice
+                if (adviceDiv && data.advice) {
+                    adviceDiv.innerHTML = data.advice.map(advice => 
+                        `<p>${advice}</p>`
+                    ).join('');
+                }
+                
+                // Show weather widget
+                if (weatherWidget) {
+                    weatherWidget.classList.remove('hidden');
+                    weatherWidget.classList.add('show');
+                }
+            }
+        })
+        .catch(error => {
+            console.log('Error fetching weather:', error);
+        });
+    }
+
+    // Trigger GPS detection on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', detectChatbotLocation);
+    } else {
+        // Page already loaded
+        detectChatbotLocation();
+    }
+    
+    // Setup refresh button listener
+    const refreshBtn = document.getElementById('chatbot-refresh-location');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            detectChatbotLocation();
+        });
+    }
+
+    // Speech Recognition Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isListening = false;
+    let micPermissionGranted = false;
+
+    // Define updateRecognitionLanguage function
+    function updateRecognitionLanguage() {
+        if (recognition) {
+            recognition.language = inputLanguage.value || 'en-US';
+            console.log('Language updated to:', recognition.language);
+        }
+    }
+
+    if (SpeechRecognition) {
+        try {
+            recognition = new SpeechRecognition();
+            // Settings for faster response
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+            recognition.language = 'en-US';
+            
+            // Add timeout to stop listening after 10 seconds of speech
+            let silenceTimer = null;
+            let lastResultTime = 0;
+
+            recognition.onstart = function() {
+                isListening = true;
+                micButton.classList.add('recording');
+                transcriptDisplay.classList.add('active');
+                voiceStatus.textContent = '🎤 Listening... (Speak naturally, pause to submit)';
+                lastResultTime = Date.now();
+                console.log('Speech recognition started');
+            };
+
+            recognition.onresult = function(event) {
+                lastResultTime = Date.now();
+                let interimTranscript = '';
+                let finalTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                const displayText = finalTranscript.trim() || interimTranscript.trim();
+                transcriptText.textContent = displayText;
+                chatInput.value = displayText;
+                voiceStatus.textContent = '🎤 Listening... (' + (displayText.length > 0 ? 'Processing' : 'Waiting for speech') + ')';
+
+                // Clear previous silence timer
+                if (silenceTimer) clearTimeout(silenceTimer);
+
+                // If we have final transcript, auto-submit after 1.5 seconds of silence
+                if (finalTranscript.trim()) {
+                    silenceTimer = setTimeout(() => {
+                        if (isListening && finalTranscript.trim()) {
+                            console.log('Auto-submitting after silence:', finalTranscript.trim());
+                            recognition.stop();
+                            voiceStatus.textContent = '✓ Submitted!';
+                            setTimeout(() => {
+                                chatForm.dispatchEvent(new Event('submit'));
+                            }, 300);
+                        }
+                    }, 1500);
+                }
+            };
+
+            recognition.onerror = function(event) {
+                voiceStatus.textContent = '⚠️ Error: ' + event.error;
+                console.error('Speech recognition error:', event.error);
+                if (silenceTimer) clearTimeout(silenceTimer);
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                micButton.classList.remove('recording');
+                if (silenceTimer) clearTimeout(silenceTimer);
+                console.log('Speech recognition ended');
+                
+                // Update status
+                if (chatInput.value.trim()) {
+                    voiceStatus.textContent = '';
+                } else {
+                    voiceStatus.textContent = 'Listening stopped. No text captured.';
+                }
+                
+                // Keep transcript display for 2 seconds
+                setTimeout(() => {
+                    transcriptDisplay.classList.remove('active');
+                    transcriptText.textContent = '';
+                }, 2000);
+            };
+
+            console.log('Speech recognition initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize speech recognition:', error);
+            micButton.disabled = true;
+            voiceStatus.textContent = 'Speech recognition initialization failed';
+        }
+
+        // Update language when user changes it
+        inputLanguage.addEventListener('change', () => {
+            if (recognition) {
+                recognition.language = inputLanguage.value || 'en-US';
+            }
+        });
+    } else {
+        micButton.disabled = true;
+        voiceStatus.textContent = 'Speech recognition not supported in your browser';
+        console.warn('SpeechRecognition API not available');
+    }
+
+    async function ensureMicrophonePermission() {
+        if (micPermissionGranted) return true;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            voiceStatus.textContent = 'Microphone access is not available in this browser/context';
+            return false;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach(track => track.stop());
+            micPermissionGranted = true;
+            return true;
+        } catch (error) {
+            voiceStatus.textContent = 'Microphone permission denied. Please allow mic access.';
+            console.error('Microphone permission error:', error);
+            return false;
+        }
+    }
+
+    // Microphone button click handler
+    if (micButton) {
+        micButton.addEventListener('click', async function(e) {
+            e.preventDefault();
+            if (!recognition) {
+                voiceStatus.textContent = 'Speech recognition not available';
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+                voiceStatus.textContent = 'Processing...';
+            } else {
+                // Ensure language is updated before starting
+                updateRecognitionLanguage();
+                chatInput.value = '';
+                transcriptText.textContent = '';
+                const canUseMic = await ensureMicrophonePermission();
+                if (!canUseMic) return;
+
+                try {
+                    recognition.start();
+                } catch (error) {
+                    voiceStatus.textContent = 'Unable to start voice input. Please try again.';
+                    console.error('Speech recognition start error:', error);
+                }
+            }
+        });
+    } else {
+        console.error('Microphone button not found in DOM');
+    }
+
+    // Add keyboard shortcut for quick mic toggle and submission
+    document.addEventListener('keydown', function(e) {
+        // Press 'M' to toggle microphone
+        if (e.key.toLowerCase() === 'm' && e.ctrlKey) {
+            e.preventDefault();
+            if (micButton) {
+                micButton.click();
+            }
+        }
+        // Press Enter while mic is listening to submit
+        if (e.key === 'Enter' && isListening && chatInput.value.trim()) {
+            e.preventDefault();
+            recognition.stop();
+            voiceStatus.textContent = '✓ Submitted!';
+            setTimeout(() => {
+                chatForm.dispatchEvent(new Event('submit'));
+            }, 300);
+        }
+    });
+
+    // Global audio state tracking
+    let currentAudio = null;
+    let currentSpeakBtn = null;
+    let isAudioPlaying = false;
+
+    // Sidebar toggle functionality
+    const sidebar = document.getElementById('chatbot-sidebar');
+    const sidebarOpen = document.getElementById('sidebar-open');
+    const sidebarClose = document.getElementById('sidebar-close');
+    const newChatBtn = document.getElementById('new-chat-btn');
+
+    if (sidebarOpen) {
+        sidebarOpen.addEventListener('click', () => {
+            sidebar.classList.add('open');
+        });
+    }
+
+    if (sidebarClose) {
+        sidebarClose.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+        });
+    }
+
+    if (newChatBtn) {
+        newChatBtn.addEventListener('click', () => {
+            // Clear chat history
+            chatHistory.innerHTML = '<div class="message-wrapper assistant"><div class="message-content assistant">👋 Hello! I\'m your Smart Farming Assistant. Ask me about crop disease, irrigation, pest control, fertilizer planning, weather, and market prices.</div></div>';
+            chatInput.value = '';
+            sidebar.classList.remove('open');
+        });
+    }
+
+    // Text-to-Speech setup - using backend TTS with fallback to browser TTS
+    function speakText(text, langCode = 'en', speakBtn) {
+        // If audio is already playing, stop it
+        if (isAudioPlaying && currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            isAudioPlaying = false;
+            if (currentSpeakBtn) {
+                currentSpeakBtn.innerHTML = '🔊';
+                currentSpeakBtn.style.filter = 'none';
+            }
+            currentAudio = null;
+            currentSpeakBtn = null;
+            return;
+        }
+
+        // Cancel any ongoing browser speech synthesis
+        if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+
+        // Update button state to indicate playing
+        speakBtn.innerHTML = '⏹';
+        speakBtn.style.filter = 'brightness(0.7)';
+        currentSpeakBtn = speakBtn;
+
+        // Try backend TTS first for better quality
+        fetch('/ajax/chatbot/speak/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                text: text,
+                language: langCode
+            })
+        })
+        .then(response => {
+            if (response.ok && response.headers.get('content-type')?.includes('audio')) {
+                // Backend generated audio - play it
+                return response.blob().then(blob => {
+                    const audioUrl = URL.createObjectURL(blob);
+                    const audio = new Audio(audioUrl);
+                    
+                    // Store reference to current audio
+                    currentAudio = audio;
+                    isAudioPlaying = true;
+
+                    // Reset button when audio ends
+                    audio.addEventListener('ended', () => {
+                        isAudioPlaying = false;
+                        speakBtn.innerHTML = '🔊';
+                        speakBtn.style.filter = 'none';
+                        currentAudio = null;
+                        currentSpeakBtn = null;
+                    });
+
+                    audio.addEventListener('error', () => {
+                        console.warn('Audio playback error');
+                        isAudioPlaying = false;
+                        speakBtn.innerHTML = '🔊';
+                        speakBtn.style.filter = 'none';
+                        currentAudio = null;
+                        currentSpeakBtn = null;
+                        fallbackBrowserTTS(text, langCode, speakBtn);
+                    });
+
+                    audio.play().catch(err => {
+                        console.warn('Audio playback error:', err);
+                        isAudioPlaying = false;
+                        speakBtn.innerHTML = '🔊';
+                        speakBtn.style.filter = 'none';
+                        currentAudio = null;
+                        currentSpeakBtn = null;
+                        fallbackBrowserTTS(text, langCode, speakBtn);
+                    });
+                });
+            } else {
+                // Fallback to response JSON
+                return response.json().then(data => {
+                    if (data.method === 'browser_tts') {
+                        isAudioPlaying = false;
+                        speakBtn.innerHTML = '🔊';
+                        speakBtn.style.filter = 'none';
+                        fallbackBrowserTTS(text, langCode, speakBtn);
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.warn('TTS fetch error:', error);
+            isAudioPlaying = false;
+            speakBtn.innerHTML = '🔊';
+            speakBtn.style.filter = 'none';
+            currentAudio = null;
+            currentSpeakBtn = null;
+            fallbackBrowserTTS(text, langCode, speakBtn);
+        });
+    }
+
+    function fallbackBrowserTTS(text, langCode, speakBtn) {
+        // Fallback to browser Web Speech API
+        const languageCodes = {
+            'en': 'en-US',
+            'hi': 'hi-IN',
+            'te': 'te-IN',
+            'ta': 'ta-IN',
+            'mr': 'mr-IN',
+            'bn': 'bn-IN',
+            'gu': 'gu-IN',
+            'kn': 'kn-IN',
+            'pa': 'pa-IN'
+        };
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = languageCodes[langCode] || 'en-US';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+
+        // Update button state
+        speakBtn.innerHTML = '⏹';
+        speakBtn.style.filter = 'brightness(0.7)';
+        isAudioPlaying = true;
+
+        utterance.onend = () => {
+            isAudioPlaying = false;
+            speakBtn.innerHTML = '🔊';
+            speakBtn.style.filter = 'none';
+        };
+
+        utterance.onerror = (event) => {
+            console.error('Speech synthesis error:', event.error);
+            isAudioPlaying = false;
+            speakBtn.innerHTML = '🔊';
+            speakBtn.style.filter = 'none';
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // Form submission handler - Updated for new message layout
+    function appendMessage(text, sender, suggestions) {
+        const wrapper = document.createElement('div');
+        wrapper.className = sender === 'user' ? 'message-wrapper user' : 'message-wrapper assistant';
+
+        const messageContent = document.createElement('div');
+        messageContent.className = sender === 'user' ? 'message-content user' : 'message-content assistant';
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = text;
+        messageContent.appendChild(textSpan);
+
+        // Add speak button for bot messages
+        if (sender === 'bot') {
+            const speakContainer = document.createElement('div');
+            speakContainer.style.display = 'flex';
+            speakContainer.style.gap = '0.5rem';
+            speakContainer.style.marginLeft = '0.5rem';
+            speakContainer.style.flexShrink = '0';
+
+            const speakBtn = document.createElement('button');
+            speakBtn.innerHTML = '🔊';
+            speakBtn.style.background = 'none';
+            speakBtn.style.border = 'none';
+            speakBtn.style.cursor = 'pointer';
+            speakBtn.style.fontSize = '1rem';
+            speakBtn.style.padding = '0';
+            speakBtn.style.transition = 'filter 0.2s ease';
+            speakBtn.title = 'Click to play/stop audio';
+            speakBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const selectedLang = languageMap[inputLanguage.value] || 'en';
+                speakText(text, selectedLang, speakBtn);
+            });
+            speakContainer.appendChild(speakBtn);
+            messageContent.appendChild(speakContainer);
+        }
+
+        wrapper.appendChild(messageContent);
+        chatHistory.appendChild(wrapper);
+
+        if (sender === 'bot' && Array.isArray(suggestions) && suggestions.length) {
+            const hints = document.createElement('div');
+            hints.style.fontSize = '0.75rem';
+            hints.style.color = '#666';
+            hints.style.marginTop = '0.5rem';
+            hints.style.marginLeft = '0';
+            hints.textContent = 'Suggestions: ' + suggestions.join(' | ');
+            chatHistory.appendChild(hints);
+        }
+
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+
+    // Prevent Enter from adding newline when listening - submit instead
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            if (isListening) {
+                // If listening, stop and submit
+                e.preventDefault();
+                recognition.stop();
+            } else if (!isListening) {
+                // If typing, submit on Enter
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        }
+    });
+
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        appendMessage(message, 'user');
+        chatInput.value = '';
+        chatInput.style.height = 'auto';
+
+        try {
+            // Get the selected input language code (e.g., 'en', 'hi', 'te')
+            const selectedLanguage = languageMap[inputLanguage.value] || 'en';
+
+            const res = await fetch('{% url "core:chatbot_message_ajax" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    message,
+                    market_region: marketRegion.value,
+                    response_language: selectedLanguage
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                appendMessage(data.error || 'Failed to get response from chatbot.', 'bot');
+                return;
+            }
+
+            appendMessage(data.response.answer, 'bot', data.response.suggestions || []);
+        } catch (error) {
+            appendMessage('Network error. Please try again.', 'bot');
+        }
+    });
+})();
+</script>
+{% endblock %}

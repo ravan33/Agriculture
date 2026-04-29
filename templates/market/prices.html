@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Real-time Market Prices" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header Section -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">{% trans "Real-time Market Prices" %}</h1>
+                <p class="text-gray-600 mt-2">{% trans "Live agricultural commodity prices from various mandis across India" %}</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div>
+                    <label for="market-region" class="sr-only">Market Region</label>
+                    <select id="market-region" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        {% for option in market_region_options %}
+                            <option value="{{ option.value }}" {% if market_region == option.value %}selected{% endif %}>{{ option.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Last Updated -->
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-clock mr-1"></i>
+                    {% trans "Last updated:" %} <span id="last-updated">{{ last_updated|default:"Just now" }}</span>
+                </div>
+                
+                <!-- Refresh Button -->
+                <button id="refresh-prices" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    {% trans "Refresh" %}
+                </button>
+                
+                <!-- Loading Indicator -->
+                <div id="loading-indicator" class="hidden">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-seedling text-blue-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">{% trans "Total Crops" %}</p>
+                    <p class="text-2xl font-bold text-gray-900" data-summary="total_crops">{{ summary.total_crops|default:"15" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-arrow-up text-green-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">{% trans "Price Rising" %}</p>
+                    <p class="text-2xl font-bold text-green-600" data-summary="trending_up">{{ summary.trending_up|default:"8" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-arrow-down text-red-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">{% trans "Price Falling" %}</p>
+                    <p class="text-2xl font-bold text-red-600" data-summary="trending_down">{{ summary.trending_down|default:"4" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-minus text-gray-600"></i>
+                    </div>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">{% trans "Stable" %}</p>
+                    <p class="text-2xl font-bold text-gray-600" data-summary="stable">{{ summary.stable|default:"3" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location and Weather Widget -->
+    <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">{% trans "Current Location & Weather" %}</h3>
+                <p class="text-gray-600" id="location-text">{% trans "Detecting location..." %}</p>
+            </div>
+            <div id="weather-info" class="text-right">
+                <div class="text-2xl font-bold text-gray-900" id="temperature">--°C</div>
+                <div class="text-sm text-gray-500" id="weather-desc">{% trans "Loading..." %}</div>
+            </div>
+        </div>
+        <button id="detect-location" class="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+            <i class="fas fa-map-marker-alt mr-2"></i>
+            {% trans "Detect My Location" %}
+        </button>
+    </div>
+
+    <!-- Market Prices Table -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">{% trans "Current Market Prices" %}</h3>
+            <p class="text-gray-600">{% trans "Real-time prices from major agricultural markets" %} ({{ market_region|upper }})</p>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table id="market-prices-table" class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Crop / Location" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Current Price" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Market / Date" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {% trans "Price Trend" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for price in market_prices %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ price.crop }}</div>
+                            <div class="text-sm text-gray-500">{{ price.state }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-bold text-green-600">{{ price.price }}</div>
+                            <div class="text-xs text-gray-500">per {{ price.unit }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ price.market }}</div>
+                            <div class="text-xs text-gray-500">{{ price.date }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if price.trend == 'up' %}bg-green-100 text-green-800
+                                {% elif price.trend == 'down' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {% if price.trend == 'up' %}↗️{% elif price.trend == 'down' %}↘️{% else %}↔️{% endif %}
+                                {{ price.change }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                            {% trans "Loading market prices..." %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800">
+                    {% trans "Disclaimer" %}
+                </h3>
+                <div class="mt-2 text-sm text-yellow-700">
+                    <p>
+                        {% trans "Prices shown are indicative and may vary. Please verify current rates at your local mandi before making any transactions. This data is for reference purposes only." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Real-time market price functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const refreshBtn = document.getElementById('refresh-prices');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const lastUpdated = document.getElementById('last-updated');
+    const detectLocationBtn = document.getElementById('detect-location');
+    const marketRegionSelect = document.getElementById('market-region');
+    
+    // Auto-refresh every 5 minutes
+    setInterval(refreshMarketPrices, 300000);
+    
+    // Initialize on page load
+    refreshMarketPrices();
+    
+    // Manual refresh button
+    refreshBtn.addEventListener('click', refreshMarketPrices);
+    marketRegionSelect.addEventListener('change', refreshMarketPrices);
+    
+    // Location detection
+    detectLocationBtn.addEventListener('click', detectLocation);
+    
+    function refreshMarketPrices() {
+        refreshBtn.disabled = true;
+        loadingIndicator.classList.remove('hidden');
+        const region = marketRegionSelect ? marketRegionSelect.value : 'india';
+        
+        fetch(`{% url "core:market_prices_ajax" %}?region=${encodeURIComponent(region)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateMarketTable(data.prices);
+                    updateMarketSummary(data.summary);
+                    lastUpdated.textContent = data.last_updated;
+                    
+                    // Show success notification
+                    showNotification('Market prices updated successfully!', 'success');
+                } else {
+                    showNotification('Failed to update market prices. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Network error. Please check your connection.', 'error');
+            })
+            .finally(() => {
+                refreshBtn.disabled = false;
+                loadingIndicator.classList.add('hidden');
+            });
+    }
+    
+    function detectLocation() {
+        if (navigator.geolocation) {
+            detectLocationBtn.disabled = true;
+            detectLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Detecting...';
+            
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    // Update location text
+                    document.getElementById('location-text').textContent = `Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`;
+                    
+                    // Fetch weather data
+                    fetchWeatherData(lat, lon);
+                },
+                error => {
+                    console.error('Geolocation error:', error);
+                    showNotification('Unable to detect location. Please enable location access.', 'error');
+                    document.getElementById('location-text').textContent = 'Location detection failed';
+                    resetLocationButton();
+                }
+            );
+        } else {
+            showNotification('Geolocation is not supported by this browser.', 'error');
+            resetLocationButton();
+        }
+    }
+    
+    function fetchWeatherData(lat, lon) {
+        fetch(`{% url "core:weather_by_location" %}?lat=${lat}&lon=${lon}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const weather = data.weather_data;
+                    document.getElementById('temperature').textContent = `${weather.temperature}°C`;
+                    document.getElementById('weather-desc').textContent = weather.description || weather.condition;
+                    document.getElementById('location-text').textContent = `${weather.city} (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+                    
+                    showNotification('Weather data updated!', 'success');
+                } else {
+                    showNotification('Failed to fetch weather data.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Weather API error:', error);
+                showNotification('Weather service unavailable.', 'error');
+            })
+            .finally(() => {
+                resetLocationButton();
+            });
+    }
+    
+    function resetLocationButton() {
+        detectLocationBtn.disabled = false;
+        detectLocationBtn.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Detect My Location';
+    }
+    
+    function updateMarketTable(prices) {
+        const tbody = document.querySelector('#market-prices-table tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        prices.forEach(price => {
+            const row = document.createElement('tr');
+            row.className = 'border-b hover:bg-gray-50';
+            
+            const trendIcon = getTrendIcon(price.trend);
+            const trendColor = getTrendColor(price.trend);
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-medium text-gray-900">${price.crop}</div>
+                    <div class="text-sm text-gray-500">${price.state || ''}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-bold text-green-600">${price.price}</div>
+                    <div class="text-xs text-gray-500">per ${price.unit}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${price.market}</div>
+                    <div class="text-xs text-gray-500">${price.date}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${trendColor}">
+                        ${trendIcon} ${price.change}
+                    </span>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+        });
+    }
+    
+    function updateMarketSummary(summary) {
+        // Update summary cards if they exist
+        const totalCropsEl = document.querySelector('[data-summary="total_crops"]');
+        const trendingUpEl = document.querySelector('[data-summary="trending_up"]');
+        const trendingDownEl = document.querySelector('[data-summary="trending_down"]');
+        const stableEl = document.querySelector('[data-summary="stable"]');
+        
+        if (totalCropsEl) totalCropsEl.textContent = summary.total_crops;
+        if (trendingUpEl) trendingUpEl.textContent = summary.trending_up;
+        if (trendingDownEl) trendingDownEl.textContent = summary.trending_down;
+        if (stableEl) stableEl.textContent = summary.stable;
+    }
+    
+    function getTrendIcon(trend) {
+        switch(trend) {
+            case 'up': return '↗️';
+            case 'down': return '↘️';
+            default: return '↔️';
+        }
+    }
+    
+    function getTrendColor(trend) {
+        switch(trend) {
+            case 'up': return 'bg-green-100 text-green-800';
+            case 'down': return 'bg-red-100 text-red-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    }
+    
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-4 py-2 rounded-md text-white z-50 transition-all duration-300 ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+});
+</script>
+{% endblock %}

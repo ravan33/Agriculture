@@ -1,0 +1,526 @@
+﻿{% extends 'base.html' %}
+{% load math_filters %}
+
+{% block title %}{{ page_title }} | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8 text-center">
+        <div class="bg-purple-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-brain text-3xl text-purple-600"></i>
+        </div>
+        <h1 class="font-heading font-bold text-3xl text-gray-900">{{ page_title }}</h1>
+        <p class="text-gray-600 mt-2">AI-powered instant crop disease diagnosis</p>
+    </div>
+    
+    <!-- Results Display (if available) -->
+    {% if result %}
+        <div class="mb-8 bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4">
+                <h2 class="font-heading font-semibold text-lg text-white flex items-center">
+                    <i class="fas fa-microscope mr-2"></i>
+                    Diagnosis Results</h2>
+            </div>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Image -->
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-3">Analyzed Image:</h3>
+                        <img src="{{ result.crop_image.url }}" alt="Analyzed crop image" 
+                             class="w-full h-64 object-cover rounded-lg border">
+                    </div>
+                    
+                    <!-- Results -->
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-3">AI Analysis:</h3>
+                        
+                        <!-- Disease Name -->
+                        <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                            <h4 class="font-medium text-blue-900 mb-2">
+                                <i class="fas fa-bug mr-1"></i>
+                                Detected Issue:
+                            </h4>
+                            <p class="text-blue-800 font-semibold">{{ clean_disease_name|default:result.predicted_disease }}</p>
+                        </div>
+                        
+                        <!-- Confidence Score -->
+                        <div class="mb-4 p-4 {% if result.confidence_score > 0.8 %}bg-green-50{% elif result.confidence_score > 0.5 %}bg-yellow-50{% elif result.confidence_score > 0.1 %}bg-orange-50{% else %}bg-red-50{% endif %} rounded-lg">
+                            <h4 class="font-medium {% if result.confidence_score > 0.8 %}text-green-900{% elif result.confidence_score > 0.5 %}text-yellow-900{% elif result.confidence_score > 0.1 %}text-orange-900{% else %}text-red-900{% endif %} mb-2">
+                                <i class="fas fa-chart-bar mr-1"></i>
+                                Confidence Level:
+                            </h4>
+                            {% if result.confidence_score > 0.1 %}
+                                <div class="flex items-center">
+                                    <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                        <div class="{% if result.confidence_score > 0.8 %}bg-green-500{% elif result.confidence_score > 0.5 %}bg-yellow-500{% elif result.confidence_score > 0.1 %}bg-orange-500{% else %}bg-red-500{% endif %} h-2 rounded-full confidence-bar" 
+                                             data-confidence="{{ result.confidence_score|floatformat:3 }}"></div>
+                                    </div>
+                                    <span class="font-semibold {% if result.confidence_score > 0.8 %}text-green-800{% elif result.confidence_score > 0.5 %}text-yellow-800{% elif result.confidence_score > 0.1 %}text-orange-800{% else %}text-red-800{% endif %} confidence-text"
+                                          data-confidence="{{ result.confidence_score|floatformat:3 }}">
+                                        Loading...
+                                    </span>
+                                </div>
+                            {% else %}
+                                <div class="flex items-center">
+                                    <i class="fas fa-question-circle text-red-500 mr-2"></i>
+                                    <span class="text-red-800 font-medium">
+                                        Unable to determine with confidence. Please consult an expert.
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex space-x-3">
+                            <a href="{% url 'core:create_query' %}" 
+                               class="bg-kisan-green text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300">
+                                <i class="fas fa-user-md mr-1"></i>
+                                Get Expert Opinion
+                            </a>
+                            <a href="{% url 'core:ai_history' %}" 
+                               class="bg-gray-500 text-white px-4 py-2 rounded-md font-medium hover:bg-gray-600 transition duration-300">
+                                <i class="fas fa-history mr-1"></i>
+                                View History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Remedies -->
+                {% if result.remedies %}
+                    <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                        <h4 class="font-medium text-green-900 mb-3">
+                            <i class="fas fa-prescription-bottle mr-1"></i>
+                            Recommended Treatment -  :
+                        </h4>
+                        <p class="text-green-800 whitespace-pre-line">{{ result.remedies }}</p>
+                    </div>
+                {% endif %}
+                
+                <!-- Disclaimer -->
+                <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div class="flex">
+                        <i class="fas fa-exclamation-triangle text-yellow-400 mt-1 mr-2"></i>
+                        <div>
+                            <h4 class="font-medium text-yellow-800">Important Disclaimer:</h4>
+                            <p class="text-yellow-700 text-sm mt-1">
+                                This AI diagnosis is for reference only. For accurate diagnosis and treatment, 
+                                please consult with our agricultural experts or your local agricultural extension officer.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <!-- Upload Form -->
+    <div class="bg-white rounded-lg shadow-lg">
+        <div class="px-6 py-4 border-b border-gray-200 bg-purple-50">
+            <h2 class="font-heading font-semibold text-lg text-gray-900 flex items-center">
+                <i class="fas fa-upload mr-2 text-purple-600"></i>
+                Upload Crop Image for Analysis</h2>
+        </div>
+        
+        <div class="p-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- File Upload Area -->
+                <div>
+                    <label for="{{ form.crop_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-camera mr-1 text-purple-600"></i>
+                        Choose Crop Image -     *
+                    </label>
+                    
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-purple-400 transition duration-300" id="drop-zone">
+                        <div class="space-y-1 text-center">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="{{ form.crop_image.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
+                                    <span>Upload a file</span>
+                                    {{ form.crop_image }}
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG, JPEG up to 10MB</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Image Preview -->
+                    <div id="image-preview" class="mt-4 hidden">
+                        <img id="preview-img" class="max-w-full h-48 object-cover rounded-lg border" alt="Image preview">
+                    </div>
+                    
+                    {% if form.crop_image.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.crop_image.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Tips for Better Results -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 class="font-medium text-blue-900 mb-2">
+                        <i class="fas fa-lightbulb mr-1"></i>
+                        Tips for Accurate Diagnosis -     :
+                    </h3>
+                    <ul class="text-blue-800 text-sm space-y-1">
+                        <li>• Take clear, well-lit photos of affected plant parts</li>
+                        <li>• Focus on the diseased area with symptoms clearly visible</li>
+                        <li>• Avoid blurry or dark images</li>
+                        <li>• Include some healthy parts for comparison if possible</li>
+                        <li>• ,     </li>
+                    </ul>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <a href="{% url 'core:dashboard' %}" class="text-gray-500 hover:text-gray-700 font-medium">
+                        <i class="fas fa-arrow-left mr-1"></i>
+                        Back to Dashboard
+                    </a>
+                    <button type="submit" id="analyze-btn" 
+                            class="bg-purple-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-microscope mr-2"></i>
+                        <span id="btn-text">Analyze Image</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- How It Works -->
+    <div class="mt-8 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg p-6 text-white">
+        <h3 class="font-heading font-semibold text-lg mb-4">
+            <i class="fas fa-cogs mr-2"></i>
+            How AI Diagnosis Works</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div class="text-center">
+                <div class="bg-white bg-opacity-20 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+                    <span class="font-bold">1</span>
+                </div>
+                <p>Upload crop image</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-white bg-opacity-20 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+                    <span class="font-bold">2</span>
+                </div>
+                <p>AI analyzes patterns</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-white bg-opacity-20 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+                    <span class="font-bold">3</span>
+                </div>
+                <p>Get instant results</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="mt-8 text-center">
+        <h3 class="font-medium text-gray-900 mb-4">Need more help?</h3>
+        <div class="space-x-4">
+            <a href="{% url 'core:create_query' %}" class="text-kisan-green hover:text-green-700 font-medium">
+                <i class="fas fa-user-md mr-1"></i>
+                Ask an Expert
+            </a>
+            <a href="{% url 'core:crop_library' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+                <i class="fas fa-book mr-1"></i>
+                Browse Crop Library
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Enhanced AI Diagnosis JavaScript with error handling
+const fileInput = document.getElementById('{{ form.crop_image.id_for_label }}');
+const dropZone = document.getElementById('drop-zone');
+const imagePreview = document.getElementById('image-preview');
+const previewImg = document.getElementById('preview-img');
+const analyzeBtn = document.getElementById('analyze-btn');
+const btnText = document.getElementById('btn-text');
+
+// Enhanced error handling for console warnings
+function handleConsoleErrors() {
+    // Suppress CDN warnings in production
+    const originalConsoleWarn = console.warn;
+    console.warn = function(message) {
+        if (typeof message === 'string' && message.includes('cdn.tailwindcss.com')) {
+            return; // Suppress Tailwind CDN warning
+        }
+        originalConsoleWarn.apply(console, arguments);
+    };
+    
+    // Handle extension-related errors gracefully
+    window.addEventListener('error', function(e) {
+        if (e.message && (
+            e.message.includes('message port closed') ||
+            e.message.includes('chrome-extension') ||
+            e.message.includes('Content Security Policy')
+        )) {
+            return true; // Prevent error propagation for extension conflicts
+        }
+    });
+    
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && e.reason.message && 
+            e.reason.message.includes('message channel closed')) {
+            e.preventDefault(); // Prevent console errors for extension issues
+        }
+    });
+}
+
+// Handle file selection with validation
+if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (validateImageFile(file)) {
+                displayImagePreview(file);
+            }
+        }
+    });
+}
+
+// Enhanced drag and drop handling
+if (dropZone) {
+    dropZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        dropZone.classList.add('border-purple-400', 'bg-purple-50');
+    });
+
+    dropZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('border-purple-400', 'bg-purple-50');
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        dropZone.classList.remove('border-purple-400', 'bg-purple-50');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (validateImageFile(file)) {
+                fileInput.files = files;
+                displayImagePreview(file);
+            }
+        }
+    });
+}
+
+function validateImageFile(file) {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    
+    if (!validTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPG, PNG, GIF, or WebP).');
+        return false;
+    }
+    
+    if (file.size > maxSize) {
+        alert('Please select an image smaller than 10MB.');
+        return false;
+    }
+    
+    return true;
+}
+
+function displayImagePreview(file) {
+    if (!file || !previewImg || !imagePreview) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        imagePreview.classList.remove('hidden');
+    };
+    reader.onerror = function() {
+        console.error('Error reading file');
+        alert('Error reading image file. Please try again.');
+    };
+    reader.readAsDataURL(file);
+}
+
+// Enhanced form submission handling
+const diagnosisForm = document.querySelector('form');
+if (diagnosisForm) {
+    diagnosisForm.addEventListener('submit', function(e) {
+        // Validate file selection
+        if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+            e.preventDefault();
+            alert('Please select an image file for analysis.');
+            return false;
+        }
+        
+        // Validate file
+        const file = fileInput.files[0];
+        if (!validateImageFile(file)) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // Show loading state
+        if (analyzeBtn && btnText) {
+            analyzeBtn.disabled = true;
+            btnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...    ...';
+        }
+        
+        // Show loading overlay
+        showLoadingMessage();
+    });
+}
+
+function showLoadingMessage() {
+    // Create loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'diagnosis-loading';
+    loadingOverlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    loadingOverlay.innerHTML = `
+        <div class="bg-white rounded-lg p-6 text-center max-w-sm mx-4 shadow-xl">
+            <div class="mb-4">
+                <i class="fas fa-microscope fa-3x text-purple-600 animate-pulse"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">AI Analysis in Progress</h3>
+            <p class="text-gray-600 mb-4">Analyzing your crop image for diseases...</p>
+            <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div class="bg-purple-600 h-2 rounded-full loading-bar" style="width: 0%; transition: width 10s linear;"></div>
+            </div>
+            <p class="text-sm text-gray-500">Please wait, this may take up to 10 seconds</p>
+        </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+    
+    // Animate progress bar
+    setTimeout(() => {
+        const bar = loadingOverlay.querySelector('.loading-bar');
+        if (bar) bar.style.width = '90%';
+    }, 100);
+}
+
+function hideLoadingMessage() {
+    const loadingOverlay = document.getElementById('diagnosis-loading');
+    if (loadingOverlay) {
+        loadingOverlay.remove();
+    }
+}
+
+// Results display enhancement
+function enhanceResultsDisplay() {
+    // Convert confidence scores to percentages with animation
+    const confidenceBars = document.querySelectorAll('.confidence-bar');
+    const confidenceTexts = document.querySelectorAll('.confidence-text');
+    
+    confidenceBars.forEach(bar => {
+        if (bar.dataset.confidence) {
+            const confidence = parseFloat(bar.dataset.confidence);
+            const percentage = Math.round(confidence * 100);
+            
+            // Initial state
+            bar.style.width = '0%';
+            bar.style.transition = 'width 1.5s ease-out';
+            
+            // Animate to final width
+            setTimeout(() => {
+                bar.style.width = percentage + '%';
+            }, 200);
+        }
+    });
+    
+    confidenceTexts.forEach(text => {
+        if (text.dataset.confidence) {
+            const confidence = parseFloat(text.dataset.confidence);
+            const percentage = Math.round(confidence * 100);
+            
+            // Animate the text change
+            let currentVal = 0;
+            const increment = percentage / 30; // 30 steps
+            const timer = setInterval(() => {
+                currentVal += increment;
+                if (currentVal >= percentage) {
+                    text.textContent = percentage + '%';
+                    clearInterval(timer);
+                } else {
+                    text.textContent = Math.round(currentVal) + '%';
+                }
+            }, 50);
+        }
+    });
+    
+    // Highlight and scroll to results
+    const resultsSection = document.querySelector('.mb-8.bg-white.rounded-lg.shadow-lg');
+    if (resultsSection) {
+        // Smooth scroll to results
+        setTimeout(() => {
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+        
+        // Add highlight effect
+        resultsSection.style.border = '3px solid #a855f7';
+        resultsSection.style.borderRadius = '0.5rem';
+        setTimeout(() => {
+            resultsSection.style.transition = 'border-color 2s ease-out';
+            resultsSection.style.borderColor = 'transparent';
+        }, 2000);
+    }
+}
+
+// Initialize everything on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle console errors and warnings
+    handleConsoleErrors();
+    
+    // Enhance results display if present
+    enhanceResultsDisplay();
+    
+    // Hide any existing loading overlay
+    hideLoadingMessage();
+    
+    // Re-enable form button
+    if (analyzeBtn && btnText) {
+        analyzeBtn.disabled = false;
+        btnText.innerHTML = '<i class="fas fa-microscope mr-2"></i>Analyze Image -    ';
+    }
+    
+    // Show success message if results are present
+    const resultsSection = document.querySelector('.mb-8.bg-white.rounded-lg.shadow-lg');
+    if (resultsSection) {
+        // Create success notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+        notification.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Analysis completed successfully!';
+        document.body.appendChild(notification);
+        
+        // Show notification
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // Hide notification after 3 seconds
+        setTimeout(() => {
+            notification.style.transform = 'translateX(full)';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+});
+
+// Handle page visibility changes
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        hideLoadingMessage();
+    }
+});
+
+// Prevent form resubmission on page refresh
+window.addEventListener('beforeunload', function() {
+    hideLoadingMessage();
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to AgriVision AI</title>
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #333; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f3f4f6; 
+        }
+        .email-container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background-color: #ffffff; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        .header { 
+            background: linear-gradient(135deg, #16a34a, #22c55e); 
+            color: white; 
+            padding: 30px 20px; 
+            text-align: center; 
+        }
+        .header h1 { 
+            margin: 0; 
+            font-size: 28px; 
+            font-weight: 700; 
+        }
+        .header p { 
+            margin: 8px 0 0 0; 
+            font-size: 16px; 
+            opacity: 0.9; 
+        }
+        .content { 
+            padding: 30px 25px; 
+            line-height: 1.6; 
+        }
+        .content p { 
+            margin: 0 0 16px 0; 
+            font-size: 16px; 
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #fbbf24;
+            color: #92400e;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .info-box p {
+            margin: 0;
+            color: #1e40af;
+            font-weight: 500;
+        }
+        .features {
+            margin: 25px 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            padding: 8px 0;
+        }
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #16a34a;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .footer { 
+            background-color: #f9fafb; 
+            padding: 20px; 
+            text-align: center; 
+            border-top: 1px solid #e5e7eb; 
+        }
+        .footer p { 
+            margin: 5px 0; 
+            font-size: 14px; 
+            color: #6b7280; 
+        }
+        .signature {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+        }
+        .hindi {
+            font-style: italic;
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🌾 AgriVision AI में आपका स्वागत है!</h1>
+            <p>Welcome to AgriVision AI - Your Agricultural Partner</p>
+        </div>
+        
+        <div class="content">
+            <p>नमस्ते {{ user.get_full_name|default:user.username }},</p>
+            <p class="hindi">Hello {{ user.get_full_name|default:user.username }},</p>
+            
+            <p>Thank you for registering with <strong>AgriVision AI</strong> - India's premier digital agricultural advisory platform. We are excited to have you as part of our growing community of farmers and agricultural experts.</p>
+            
+            <div class="status-badge">
+                ⏳ Account Pending Activation
+            </div>
+            
+            <div class="info-box">
+                <p><strong>Security Notice:</strong> Your account has been created and is currently awaiting activation by our administrator. This is a security step to ensure the quality and authenticity of our expert network and farming community.</p>
+            </div>
+            
+            <p>आपका खाता बनाया गया है और इसकी सक्रियता की प्रतीक्षा में है। यह प्रक्रिया आमतौर पर 24 घंटे से कम समय में पूरी होती है।</p>
+            
+            <div class="features">
+                <h3 style="color: #16a34a; margin-bottom: 15px;">What's waiting for you after activation:</h3>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">👨‍🌾</div>
+                    <div>
+                        <strong>Expert Consultation</strong> - Direct access to certified agricultural experts
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🤖</div>
+                    <div>
+                        <strong>AI Disease Diagnosis</strong> - Instant crop disease identification using AI
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">📚</div>
+                    <div>
+                        <strong>Crop Library</strong> - Comprehensive farming guides and best practices
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🔔</div>
+                    <div>
+                        <strong>Real-time Updates</strong> - Get notified about weather, market prices, and advice
+                    </div>
+                </div>
+            </div>
+            
+            <p><strong>Next Steps:</strong></p>
+            <ol>
+                <li>You will receive an activation email within 24 hours</li>
+                <li>Once activated, you can log in using your credentials</li>
+                <li>Complete your profile for better personalized advice</li>
+                <li>Start asking questions and connecting with experts</li>
+            </ol>
+            
+            <p>हमारी टीम आपके खाते की जल्दी समीक्षा करेगी। धैर्य रखने के लिए धन्यवाद।</p>
+            
+            <div class="signature">
+                <p><strong>Best regards,</strong><br>
+                <strong>The AgriVision AI Team</strong><br>
+                <em>सेवा में कृषि | Serving Agriculture</em></p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>AgriVision AI</strong> - Empowering Farmers Through Technology</p>
+            <p>&copy; 2026 AgriVision AI. All rights reserved. | Made with ❤️ for Indian Farmers</p>
+            <p style="font-size: 12px;">
+                Need help? Contact us at <a href="mailto:support@kisanmitra.com" style="color: #16a34a;">support@kisanmitra.com</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

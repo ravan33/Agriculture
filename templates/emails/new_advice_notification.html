@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Expert Advice - AgriVision AI</title>
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            color: #333; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f3f4f6; 
+        }
+        .email-container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background-color: #ffffff; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+        }
+        .header { 
+            background: linear-gradient(135deg, #7c3aed, #a855f7); 
+            color: white; 
+            padding: 30px 20px; 
+            text-align: center; 
+        }
+        .header h1 { 
+            margin: 0; 
+            font-size: 28px; 
+            font-weight: 700; 
+        }
+        .header p { 
+            margin: 8px 0 0 0; 
+            font-size: 16px; 
+            opacity: 0.9; 
+        }
+        .notification-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .content { 
+            padding: 30px 25px; 
+            line-height: 1.6; 
+        }
+        .content p { 
+            margin: 0 0 16px 0; 
+            font-size: 16px; 
+        }
+        .expert-badge {
+            display: inline-flex;
+            align-items: center;
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 15px 0;
+        }
+        .expert-badge .icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+        .query-details {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .query-details h3 {
+            margin: 0 0 15px 0;
+            color: #1e293b;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+        }
+        .query-details h3 .icon {
+            margin-right: 10px;
+            color: #7c3aed;
+        }
+        .query-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .meta-item .icon {
+            margin-right: 8px;
+            color: #7c3aed;
+        }
+        .advice-preview {
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .advice-preview h4 {
+            margin: 0 0 10px 0;
+            color: #065f46;
+            display: flex;
+            align-items: center;
+        }
+        .advice-preview h4 .icon {
+            margin-right: 10px;
+        }
+        .advice-preview p {
+            margin: 0;
+            color: #047857;
+            font-style: italic;
+        }
+        .cta-button { 
+            display: inline-block; 
+            padding: 16px 32px; 
+            background: linear-gradient(135deg, #7c3aed, #6d28d9); 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            font-weight: 700; 
+            font-size: 16px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .cta-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 25px;
+            background-color: #faf5ff;
+            border-radius: 8px;
+            border: 2px dashed #7c3aed;
+        }
+        .expert-info {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+        }
+        .expert-avatar {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 20px;
+        }
+        .expert-details h4 {
+            margin: 0 0 5px 0;
+            color: #1e40af;
+            font-size: 18px;
+        }
+        .expert-details p {
+            margin: 0;
+            color: #3730a3;
+            font-size: 14px;
+        }
+        .next-steps {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .next-steps h3 {
+            margin: 0 0 15px 0;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+        }
+        .next-steps h3 .icon {
+            margin-right: 10px;
+        }
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .next-steps li {
+            margin: 8px 0;
+            color: #92400e;
+        }
+        .footer { 
+            background-color: #f9fafb; 
+            padding: 20px; 
+            text-align: center; 
+            border-top: 1px solid #e5e7eb; 
+        }
+        .footer p { 
+            margin: 5px 0; 
+            font-size: 14px; 
+            color: #6b7280; 
+        }
+        .signature {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+        }
+        .hindi {
+            font-style: italic;
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background-color: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .stat-card .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #7c3aed;
+            display: block;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        @media (max-width: 600px) {
+            .query-meta, .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="notification-icon">📬</div>
+            <h1>विशेषज्ञ की सलाह मिली!</h1>
+            <p>New Expert Advice Received</p>
+        </div>
+        
+        <div class="content">
+            <p>नमस्ते {{ query.farmer.get_full_name|default:query.farmer.username }},</p>
+            <p class="hindi">Hello {{ query.farmer.get_full_name|default:query.farmer.username }},</p>
+            
+            <p><strong>Excellent news!</strong> An agricultural expert has provided professional advice for your query on <strong>AgriVision AI</strong>.</p>
+            
+            <div class="expert-badge">
+                <span class="icon">👨‍🌾</span>
+                Expert Response Available
+            </div>
+            
+            <div class="query-details">
+                <h3><span class="icon">❓</span>Your Query Details</h3>
+                <p><strong>{{ query.title }}</strong></p>
+                <p>{{ query.description|truncatewords:15 }}</p>
+                
+                <div class="query-meta">
+                    <div class="meta-item">
+                        <span class="icon">📅</span>
+                        Submitted: {{ query.created_at|date:"M d, Y" }}
+                    </div>
+                    <div class="meta-item">
+                        <span class="icon">📝</span>
+                        Query ID: #{{ query.id }}
+                    </div>
+                    <div class="meta-item">
+                        <span class="icon">�</span>
+                        Status: {{ query.get_status_display }}
+                    </div>
+                    <div class="meta-item">
+                        <span class="icon">⏱️</span>
+                        Response Time: {{ advice.created_at|timesince:query.created_at }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="expert-info">
+                <div class="expert-avatar">
+                    {{ advice.expert.first_name.0|default:"E" }}{{ advice.expert.last_name.0|default:"X" }}
+                </div>
+                <div class="expert-details">
+                    <h4>{{ advice.expert.get_full_name|default:"Agricultural Expert" }}</h4>
+                    <p>{{ advice.expert.specialization|default:"Certified Agricultural Expert" }}</p>
+                    <p>Response provided on {{ advice.created_at|date:"F d, Y H:i" }}</p>
+                </div>
+            </div>
+            
+            <div class="advice-preview">
+                <h4><span class="icon">💡</span>Expert Advice Preview</h4>
+                <p>"{{ advice.content|truncatewords:25 }}..."</p>
+            </div>
+            
+            <p>आपके प्रश्न का विस्तृत उत्तर देखने के लिए नीचे दिए गए बटन पर क्लिक करें।</p>
+            
+            <div class="cta-container">
+                <h3 style="color: #7c3aed; margin-bottom: 15px;">View Complete Advice</h3>
+                <a href="{{ advice_url }}" class="cta-button">
+                    📖 Read Full Expert Advice
+                </a>
+                <p style="margin-top: 15px; font-size: 14px; color: #6b7280;">
+                    Click to see detailed recommendations and treatment suggestions
+                </p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="number">{{ expert_total_advice|default:"50+" }}</span>
+                    <span class="label">Expert Advice Given</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number">{{ response_time|default:"12h" }}</span>
+                    <span class="label">Avg Response Time</span>
+                </div>
+                <div class="stat-card">
+                    <span class="number">{{ farmer_rating|default:"4.8" }}</span>
+                    <span class="label">Expert Rating</span>
+                </div>
+            </div>
+            
+            <div class="next-steps">
+                <h3><span class="icon">🎯</span>What's Next?</h3>
+                <ul>
+                    <li><strong>Read the Full Advice:</strong> Click the button above to view complete recommendations</li>
+                    <li><strong>Follow Instructions:</strong> Implement the expert's suggestions carefully</li>
+                    <li><strong>Ask Follow-up Questions:</strong> If you need clarification, you can ask additional questions</li>
+                    <li><strong>Share Results:</strong> Let us know how the advice worked for your crops</li>
+                    <li><strong>Rate the Expert:</strong> Help other farmers by rating the quality of advice</li>
+                </ul>
+            </div>
+            
+            <p><strong>Important:</strong> Please implement the expert's advice based on your local conditions and resources. If you have any doubts, don't hesitate to ask follow-up questions.</p>
+            
+            <p>हमें उम्मीद है कि यह सलाह आपकी फसल की समस्या का समाधान करने में सहायक होगी।</p>
+            
+            <div class="signature">
+                <p><strong>Best regards,</strong><br>
+                <strong>The AgriVision AI Team</strong><br>
+                <em>सेवा में कृषि | Serving Agriculture</em></p>
+                
+                <p style="margin-top: 15px; font-size: 14px;">
+                    <strong>Need More Help?</strong><br>
+                    📧 Support: <a href="mailto:support@kisanmitra.com" style="color: #16a34a;">support@kisanmitra.com</a><br>
+                    💬 Ask Another Question: <a href="{{ new_query_url }}" style="color: #7c3aed;">Submit New Query</a><br>
+                    🌐 Website: <a href="{{ site_url }}" style="color: #16a34a;">www.kisanmitra.com</a>
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>AgriVision AI</strong> - Empowering Farmers Through Technology</p>
+            <p>&copy; 2026 AgriVision AI. All rights reserved. | Made with ❤️ for Indian Farmers</p>
+            <p style="font-size: 12px;">
+                You received this email because an expert responded to your agricultural query.<br>
+                To unsubscribe from notifications, <a href="#" style="color: #6b7280;">click here</a>.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

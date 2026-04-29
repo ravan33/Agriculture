@@ -1,0 +1,409 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Notifications | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="font-heading font-bold text-3xl text-gray-900 flex items-center">
+                    <i class="fas fa-bell mr-3 text-blue-600"></i>
+                    Notifications
+                </h1>
+                <p class="text-gray-600 mt-2"> - Stay updated with important messages</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="markAllAsRead()" 
+                        class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                    <i class="fas fa-check-double mr-1"></i>
+                    Mark all as read
+                </button>
+                {% if notifications.unread %}
+                    <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-1 rounded-full">
+                        {{ notifications.unread|length }} unread
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8">
+                <button onclick="filterNotifications('all')" 
+                        class="filter-tab active border-b-2 border-blue-500 text-blue-600 py-2 px-1 text-sm font-medium">
+                    All Notifications
+                </button>
+                <button onclick="filterNotifications('unread')" 
+                        class="filter-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-2 px-1 text-sm font-medium">
+                    Unread ({{ notifications.unread|length|default:0 }})
+                </button>
+                <button onclick="filterNotifications('query')" 
+                        class="filter-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-2 px-1 text-sm font-medium">
+                    Queries
+                </button>
+                <button onclick="filterNotifications('advice')" 
+                        class="filter-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-2 px-1 text-sm font-medium">
+                    Advice
+                </button>
+                <button onclick="filterNotifications('system')" 
+                        class="filter-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-2 px-1 text-sm font-medium">
+                    System
+                </button>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Notifications List -->
+    {% if notifications %}
+        <div class="space-y-4" id="notifications-list">
+            {% for notification in notifications %}
+                <div class="notification-item bg-white rounded-lg shadow-sm border {% if not notification.is_read %}border-l-4 border-l-blue-500 bg-blue-50{% else %}border-gray-200{% endif %} overflow-hidden" 
+                     data-type="{{ notification.notification_type }}" 
+                     data-read="{{ notification.is_read|yesno:'true,false' }}">
+                    
+                    <div class="p-6">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4 flex-1">
+                                <!-- Icon -->
+                                <div class="flex-shrink-0 mt-1">
+                                    {% if notification.notification_type == 'query_response' %}
+                                        <div class="bg-green-100 rounded-full p-2">
+                                            <i class="fas fa-reply text-green-600"></i>
+                                        </div>
+                                    {% elif notification.notification_type == 'new_query' %}
+                                        <div class="bg-blue-100 rounded-full p-2">
+                                            <i class="fas fa-question-circle text-blue-600"></i>
+                                        </div>
+                                    {% elif notification.notification_type == 'system' %}
+                                        <div class="bg-purple-100 rounded-full p-2">
+                                            <i class="fas fa-cog text-purple-600"></i>
+                                        </div>
+                                    {% elif notification.notification_type == 'ai_diagnosis' %}
+                                        <div class="bg-amber-100 rounded-full p-2">
+                                            <i class="fas fa-brain text-amber-600"></i>
+                                        </div>
+                                    {% else %}
+                                        <div class="bg-gray-100 rounded-full p-2">
+                                            <i class="fas fa-info-circle text-gray-600"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Content -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h3 class="font-semibold text-gray-900 {% if not notification.is_read %}font-bold{% endif %}">
+                                            {{ notification.title }}
+                                        </h3>
+                                        <div class="flex items-center space-x-2">
+                                            {% if not notification.is_read %}
+                                                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                            {% endif %}
+                                            <span class="text-xs text-gray-500">
+                                                {{ notification.created_at|timesince }} ago
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-gray-700 text-sm leading-relaxed mb-3">
+                                        {{ notification.message }}
+                                    </p>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="flex items-center space-x-3">
+                                        {% if notification.link %}
+                                            <a href="{{ notification.link }}" 
+                                               class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                                <i class="fas fa-external-link-alt mr-1"></i>
+                                                View Details
+                                            </a>
+                                        {% endif %}
+                                        
+                                        {% if not notification.is_read %}
+                                            <button onclick="markAsRead({{ notification.id }})" 
+                                                    class="text-gray-600 hover:text-gray-700 text-sm">
+                                                <i class="fas fa-check mr-1"></i>
+                                                Mark as read
+                                            </button>
+                                        {% endif %}
+                                        
+                                        <button onclick="deleteNotification({{ notification.id }})" 
+                                                class="text-red-600 hover:text-red-700 text-sm">
+                                            <i class="fas fa-trash mr-1"></i>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Load More Button -->
+        {% if has_more %}
+            <div class="mt-8 text-center">
+                <button onclick="loadMoreNotifications()" 
+                        class="bg-blue-600 text-white px-6 py-3 rounded-md font-medium hover:bg-blue-700 transition duration-300">
+                    <i class="fas fa-plus mr-2"></i>
+                    Load More Notifications
+                </button>
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <div class="bg-gray-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-bell-slash text-4xl text-gray-400"></i>
+            </div>
+            <h3 class="font-heading font-semibold text-xl text-gray-900 mb-2">No Notifications</h3>
+            <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                You're all caught up! We'll notify you when there's something new.
+            </p>
+            <a href="{% url 'core:dashboard' %}" 
+               class="bg-blue-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-blue-700 transition duration-300">
+                <i class="fas fa-dashboard mr-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    {% endif %}
+    
+    <!-- Quick Actions -->
+    <div class="mt-12 bg-gradient-to-r from-green-600 to-green-700 rounded-lg p-6 text-white">
+        <h3 class="font-heading font-semibold text-lg mb-4">
+            <i class="fas fa-rocket mr-2"></i>
+            Quick Actions
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="{% url 'core:create_query' %}" 
+               class="bg-white bg-opacity-20 rounded-lg p-4 hover:bg-opacity-30 transition duration-300">
+                <div class="flex items-center">
+                    <i class="fas fa-question-circle text-2xl mr-3"></i>
+                    <div>
+                        <h4 class="font-medium">Ask Expert</h4>
+                        <p class="text-sm opacity-90">Get professional advice</p>
+                    </div>
+                </div>
+            </a>
+            
+            <a href="{% url 'core:ai_diagnose' %}" 
+               class="bg-white bg-opacity-20 rounded-lg p-4 hover:bg-opacity-30 transition duration-300">
+                <div class="flex items-center">
+                    <i class="fas fa-brain text-2xl mr-3"></i>
+                    <div>
+                        <h4 class="font-medium">AI Diagnosis</h4>
+                        <p class="text-sm opacity-90">Instant crop analysis</p>
+                    </div>
+                </div>
+            </a>
+            
+            <a href="{% url 'core:crop_library' %}" 
+               class="bg-white bg-opacity-20 rounded-lg p-4 hover:bg-opacity-30 transition duration-300">
+                <div class="flex items-center">
+                    <i class="fas fa-book text-2xl mr-3"></i>
+                    <div>
+                        <h4 class="font-medium">Crop Library</h4>
+                        <p class="text-sm opacity-90">Browse crop guides</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Back to Dashboard -->
+    <div class="mt-8 text-center">
+        <a href="{% url 'core:dashboard' %}" 
+           class="text-gray-500 hover:text-gray-700 font-medium">
+            <i class="fas fa-arrow-left mr-1"></i>
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<script>
+function filterNotifications(type) {
+    const items = document.querySelectorAll('.notification-item');
+    const tabs = document.querySelectorAll('.filter-tab');
+    
+    // Update active tab
+    tabs.forEach(tab => {
+        tab.classList.remove('active', 'border-blue-500', 'text-blue-600');
+        tab.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    event.target.classList.add('active', 'border-blue-500', 'text-blue-600');
+    event.target.classList.remove('border-transparent', 'text-gray-500');
+    
+    // Filter notifications
+    items.forEach(item => {
+        const itemType = item.dataset.type;
+        const isRead = item.dataset.read === 'true';
+        
+        let shouldShow = false;
+        
+        switch(type) {
+            case 'all':
+                shouldShow = true;
+                break;
+            case 'unread':
+                shouldShow = !isRead;
+                break;
+            case 'query':
+                shouldShow = itemType === 'new_query';
+                break;
+            case 'advice':
+                shouldShow = itemType === 'query_response';
+                break;
+            case 'system':
+                shouldShow = itemType === 'system';
+                break;
+        }
+        
+        if (shouldShow) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function markAsRead(notificationId) {
+    fetch(`/notifications/mark-read/${notificationId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error marking notification as read');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error marking notification as read');
+    });
+}
+
+function markAllAsRead() {
+    if (confirm('Mark all notifications as read?')) {
+        fetch('/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error marking all notifications as read');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error marking all notifications as read');
+        });
+    }
+}
+
+function deleteNotification(notificationId) {
+    if (confirm('Delete this notification?')) {
+        fetch(`/notifications/delete/${notificationId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the notification element from DOM
+                document.querySelector(`[data-id="${notificationId}"]`).remove();
+            } else {
+                alert('Error deleting notification');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting notification');
+        });
+    }
+}
+
+function loadMoreNotifications() {
+    const currentCount = document.querySelectorAll('.notification-item').length;
+    
+    fetch(`/notifications/?offset=${currentCount}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Append new notifications to the list
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const newNotifications = doc.querySelectorAll('.notification-item');
+        
+        const notificationsList = document.getElementById('notifications-list');
+        newNotifications.forEach(notification => {
+            notificationsList.appendChild(notification);
+        });
+        
+        // Hide load more button if no more notifications
+        if (newNotifications.length === 0) {
+            document.querySelector('[onclick="loadMoreNotifications()"]').style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error loading more notifications');
+    });
+}
+
+// Auto-refresh notifications every 30 seconds
+setInterval(() => {
+    const unreadCount = document.querySelectorAll('[data-read="false"]').length;
+    
+    fetch('/notifications/check-new/')
+    .then(response => response.json())
+    .then(data => {
+        if (data.new_count > unreadCount) {
+            // Show notification about new notifications
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            notification.innerHTML = `
+                <i class="fas fa-bell mr-2"></i>
+                New notifications available
+                <button onclick="location.reload()" class="ml-3 underline">Refresh</button>
+                <button onclick="this.parentElement.remove()" class="ml-2">×</button>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+    })
+    .catch(error => {
+        console.error('Error checking for new notifications:', error);
+    });
+}, 30000);
+</script>
+{% endblock %}
+

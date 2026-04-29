@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Report - {{ query.title }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 20px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .query-info {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-left: 4px solid #4CAF50;
+            margin-bottom: 30px;
+        }
+        
+        .info-row {
+            margin-bottom: 10px;
+        }
+        
+        .label {
+            font-weight: bold;
+            color: #333;
+            display: inline-block;
+            min-width: 120px;
+        }
+        
+        .query-content {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        
+        .query-description {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .advice-section {
+            margin-bottom: 30px;
+        }
+        
+        .advice-item {
+            background-color: #f0f8ff;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .expert-name {
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        
+        .confidence-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            margin-left: 10px;
+        }
+        
+        .confidence-high { background-color: #28a745; }
+        .confidence-medium { background-color: #ffc107; color: #333; }
+        .confidence-low { background-color: #dc3545; }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .image-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .crop-image {
+            max-width: 300px;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .no-advice {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🌾 AgriVision AI</div>
+        <div class="subtitle">Agricultural Expert Advisory System</div>
+    </div>
+    
+    <div class="query-info">
+        <div class="info-row">
+            <span class="label">Farmer:</span>
+            {{ query.farmer.get_full_name }}
+        </div>
+        <div class="info-row">
+            <span class="label">Query ID:</span>
+            #{{ query.id }}
+        </div>
+        <div class="info-row">
+            <span class="label">Submitted:</span>
+            {{ query.created_at|date:"F d, Y" }} at {{ query.created_at|time:"g:i A" }}
+        </div>
+        <div class="info-row">
+            <span class="label">Status:</span>
+            {{ query.get_status_display }}
+        </div>
+    </div>
+    
+    <div class="query-content">
+        <div class="section-title">📝 Query Details</div>
+        
+        <h3>{{ query.title }}</h3>
+        
+        <div class="query-description">
+            {{ query.description|linebreaks }}
+        </div>
+        
+        {% if query.crop_image %}
+        <div class="image-container">
+            <div class="section-title">📸 Crop Image</div>
+            <img src="{{ query.crop_image.url }}" alt="Crop Image" class="crop-image">
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="advice-section">
+        <div class="section-title">💡 Expert Advice</div>
+        
+        {% if advice_responses %}
+            {% for advice in advice_responses %}
+                <div class="advice-item">
+                    <div class="expert-name">
+                        👨‍🌾 {{ advice.expert.get_full_name }}
+                        <span class="confidence-badge confidence-{{ advice.confidence_level }}">
+                            {{ advice.get_confidence_level_display }} Confidence
+                        </span>
+                    </div>
+                    <div class="advice-content">
+                        {{ advice.content|linebreaks }}
+                    </div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #666;">
+                        Provided on {{ advice.created_at|date:"F d, Y" }} at {{ advice.created_at|time:"g:i A" }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-advice">
+                No expert advice available yet. This query is still pending review.
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="footer">
+        <p>This report was generated on {{ now|date:"F d, Y" }} at {{ now|time:"g:i A" }}</p>
+        <p>AgriVision AI - Empowering Farmers with Expert Agricultural Guidance</p>
+        <p>For support, contact: support@kisanmitra.in</p>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,1052 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} | AgriVision AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .nav-widget {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1rem;
+        padding: 2.5rem 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(34, 139, 34, 0.3);
+        background: linear-gradient(135deg, rgba(34, 139, 34, 0.15), rgba(34, 139, 34, 0.08));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        box-shadow: 0 8px 32px rgba(34, 139, 34, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        min-height: 180px;
+    }
+
+    .nav-widget:hover {
+        border-color: rgba(34, 139, 34, 0.5);
+        background: linear-gradient(135deg, rgba(34, 139, 34, 0.25), rgba(34, 139, 34, 0.15));
+        box-shadow: 0 16px 48px rgba(34, 139, 34, 0.2);
+        transform: translateY(-4px);
+    }
+
+    .nav-widget-icon {
+        font-size: 2.5rem;
+        color: rgb(34, 139, 34);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 4.5rem;
+        height: 4.5rem;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, rgba(34, 139, 34, 0.2), rgba(34, 139, 34, 0.1));
+        border: 1px solid rgba(34, 139, 34, 0.3);
+    }
+
+    .nav-widget-label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Enhanced Professional Header -->
+    <div class="mb-8 bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-600 rounded-xl shadow-2xl p-8 text-white">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+                <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <i class="fas fa-user-tie text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading font-bold text-4xl mb-2">
+                        {% trans "Expert Dashboard" %}
+                    </h1>
+                    <p class="text-indigo-100 text-lg">{% trans "Welcome back, Dr." %} {{ user.get_full_name|default:user.username }}</p>
+                    <div class="flex items-center space-x-4 mt-3">
+                        <div class="flex items-center bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                            <i class="fas fa-certificate mr-2"></i>
+                            <span class="text-sm">{{ user.specialization|default:"Senior Agricultural Expert" }}</span>
+                        </div>
+                        <div class="flex items-center bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                            <i class="fas fa-clock mr-2"></i>
+                            <span class="text-sm">{% trans "Online Now" %}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hidden lg:flex flex-col items-end space-y-3">
+                <div class="bg-white bg-opacity-20 rounded-lg p-4 backdrop-blur-sm">
+                    <div class="text-right">
+                        <p class="text-sm text-indigo-100">{% trans "Expert Level" %}</p>
+                        <p class="text-2xl font-bold">{{ expertise_level|default:"Senior" }}</p>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4 backdrop-blur-sm">
+                    <div class="text-right">
+                        <p class="text-sm text-indigo-100">{% trans "Monthly Rank" %}</p>
+                        <p class="text-2xl font-bold">#{{ monthly_ranking|default:1 }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GPS Location Widget -->
+        <div id="location-widget" class="mt-4 p-4 bg-white bg-opacity-10 rounded-lg backdrop-blur-sm border-l-4 border-indigo-300">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📍</span>
+                    <div>
+                        <p class="text-xs text-indigo-200 font-semibold">Current Location</p>
+                        <p id="dashboard-location" class="text-sm font-medium text-white">Detecting location...</p>
+                        <p id="dashboard-coordinates" class="text-xs text-indigo-300 mt-1">GPS: Waiting...</p>
+                    </div>
+                </div>
+                <button id="refresh-location-btn" type="button" 
+                    class="px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-sm font-medium rounded-md border border-indigo-300 transition">
+                    🔄 Refresh
+                </button>
+            </div>
+        </div>
+        
+        <!-- Quick Status Bar -->
+        <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white bg-opacity-10 rounded-lg p-3 text-center backdrop-blur-sm">
+                <div class="text-2xl font-bold">{{ pending_count|default:0 }}</div>
+                <div class="text-xs text-indigo-200">{% trans "Pending Queries" %}</div>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-lg p-3 text-center backdrop-blur-sm">
+                <div class="text-2xl font-bold">{{ success_rate|floatformat:1|default:95 }}%</div>
+                <div class="text-xs text-indigo-200">{% trans "Success Rate" %}</div>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-lg p-3 text-center backdrop-blur-sm">
+                <div class="text-2xl font-bold">{{ farmer_rating|floatformat:1|default:4.8 }}/5</div>
+                <div class="text-xs text-indigo-200">{% trans "Rating" %}</div>
+            </div>
+            <div class="bg-white bg-opacity-10 rounded-lg p-3 text-center backdrop-blur-sm">
+                <div class="text-2xl font-bold">{{ unique_farmers_helped|default:0 }}</div>
+                <div class="text-xs text-indigo-200">{% trans "Farmers Helped" %}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Premium Stats Cards with Enhanced Design -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Pending Queries -->
+        <div class="group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-full p-3">
+                            <i class="fas fa-clock text-2xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-yellow-100 text-sm font-medium">{% trans "URGENT QUERIES" %}</p>
+                            <div class="flex items-center">
+                                <div class="text-4xl font-bold">{{ pending_count|default:0 }}</div>
+                                <div class="ml-2 bg-red-500 text-xs px-2 py-1 rounded-full">
+                                    {{ pending_urgent_count|default:0 }} {% trans "urgent" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-yellow-100 text-sm">{% trans "Awaiting Your Expertise" %}</span>
+                        <div class="w-12 h-1 bg-white bg-opacity-30 rounded-full">
+                            <div class="h-full bg-white rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- My Advice Count -->
+        <div class="group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div class="bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-full p-3">
+                            <i class="fas fa-lightbulb text-2xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-green-100 text-sm font-medium">{% trans "ADVICE GIVEN" %}</p>
+                            <div class="flex items-center">
+                                <div class="text-4xl font-bold">{{ my_advice_count|default:0 }}</div>
+                                <div class="ml-2 bg-emerald-400 text-xs px-2 py-1 rounded-full">
+                                    +{{ this_month_advice|default:0 }} {% trans "month" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-green-100 text-sm">{% trans "Solutions Provided" %}</span>
+                        <div class="flex items-center">
+                            <i class="fas fa-trending-up text-sm mr-1"></i>
+                            <span class="text-sm font-semibold">+23%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success Rate -->
+        <div class="group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-full p-3">
+                            <i class="fas fa-chart-line text-2xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-blue-100 text-sm font-medium">{% trans "SUCCESS RATE" %}</p>
+                            <div class="flex items-center">
+                                <div class="text-4xl font-bold">{{ success_rate|floatformat:1|default:95.8 }}%</div>
+                                <div class="ml-2 bg-blue-400 text-xs px-2 py-1 rounded-full">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-blue-100 text-sm">{% trans "Farmer Satisfaction" %}</span>
+                        <div class="flex text-yellow-300">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= farmer_rating|default:5 %}
+                                    <i class="fas fa-star text-xs"></i>
+                                {% else %}
+                                    <i class="far fa-star text-xs"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Farmers Helped -->
+        <div class="group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-full p-3">
+                            <i class="fas fa-users text-2xl"></i>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-purple-100 text-sm font-medium">{% trans "FARMERS HELPED" %}</p>
+                            <div class="flex items-center">
+                                <div class="text-4xl font-bold">{{ unique_farmers_helped|default:0 }}</div>
+                                <div class="ml-2 bg-pink-400 text-xs px-2 py-1 rounded-full">
+                                    +{{ new_farmers_this_week|default:0 }} {% trans "week" %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-purple-100 text-sm">{% trans "Lives Impacted" %}</span>
+                        <div class="flex items-center">
+                            <i class="fas fa-heart text-pink-300 text-sm mr-1"></i>
+                            <span class="text-sm font-semibold">{{ unique_farmers_helped|default:0 }}+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Expert Analytics Dashboard -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+        <!-- Advanced Query Management -->
+        <div class="bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-heading font-bold text-xl text-gray-900">
+                    <i class="fas fa-filter mr-3 text-indigo-600"></i>
+                    {% trans "Smart Query Filters" %}
+                </h3>
+                <div class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-semibold">
+                    {% trans "PRIORITY" %}
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <a href="{% url 'core:pending_queries' %}?urgent=true" class="block group">
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 rounded-xl transition-all duration-300 transform group-hover:scale-105">
+                        <div class="flex items-center">
+                            <div class="bg-red-500 rounded-full p-2 mr-4">
+                                <i class="fas fa-exclamation-triangle text-white"></i>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-800">{% trans "Urgent Queries" %}</span>
+                                <p class="text-xs text-red-600 mt-1">{% trans "Requires immediate attention" %}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-red-500 text-white text-sm px-3 py-1 rounded-full font-bold">{{ pending_urgent_count|default:0 }}</span>
+                            <i class="fas fa-arrow-right text-red-400 ml-2 group-hover:text-red-600"></i>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'core:pending_queries' %}?crop_type=wheat" class="block group">
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 hover:from-yellow-100 hover:to-yellow-200 rounded-xl transition-all duration-300 transform group-hover:scale-105">
+                        <div class="flex items-center">
+                            <div class="bg-yellow-500 rounded-full p-2 mr-4">
+                                <i class="fas fa-seedling text-white"></i>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-800">{% trans "Wheat Issues" %}</span>
+                                <p class="text-xs text-yellow-600 mt-1">{% trans "Seasonal crop problems" %}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-yellow-500 text-white text-sm px-3 py-1 rounded-full font-bold">{{ wheat_queries_count|default:0 }}</span>
+                            <i class="fas fa-arrow-right text-yellow-400 ml-2 group-hover:text-yellow-600"></i>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'core:pending_queries' %}?crop_type=rice" class="block group">
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 rounded-xl transition-all duration-300 transform group-hover:scale-105">
+                        <div class="flex items-center">
+                            <div class="bg-green-500 rounded-full p-2 mr-4">
+                                <i class="fas fa-leaf text-white"></i>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-800">{% trans "Rice Issues" %}</span>
+                                <p class="text-xs text-green-600 mt-1">{% trans "Water & pest management" %}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-green-500 text-white text-sm px-3 py-1 rounded-full font-bold">{{ rice_queries_count|default:0 }}</span>
+                            <i class="fas fa-arrow-right text-green-400 ml-2 group-hover:text-green-600"></i>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'core:pending_queries' %}?disease=true" class="block group">
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 rounded-xl transition-all duration-300 transform group-hover:scale-105">
+                        <div class="flex items-center">
+                            <div class="bg-purple-500 rounded-full p-2 mr-4">
+                                <i class="fas fa-bug text-white"></i>
+                            </div>
+                            <div>
+                                <span class="font-semibold text-gray-800">{% trans "Disease Related" %}</span>
+                                <p class="text-xs text-purple-600 mt-1">{% trans "Diagnostics required" %}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="bg-purple-500 text-white text-sm px-3 py-1 rounded-full font-bold">{{ disease_queries_count|default:0 }}</span>
+                            <i class="fas fa-arrow-right text-purple-400 ml-2 group-hover:text-purple-600"></i>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="mt-6 p-4 bg-gray-50 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-600">{% trans "AI Suggestion Engine" %}</span>
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                        {% trans "ACTIVE" %}
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{% trans "Smart recommendations based on your expertise" %}</p>
+            </div>
+        </div>
+
+        <!-- Enhanced Expert Performance -->
+        <div class="bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-heading font-bold text-xl text-gray-900">
+                    <i class="fas fa-trophy mr-3 text-yellow-500"></i>
+                    {% trans "Performance Analytics" %}
+                </h3>
+                <div class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-semibold">
+                    {% trans "PREMIUM" %}
+                </div>
+            </div>
+            
+            <!-- Performance Metrics -->
+            <div class="space-y-5">
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold text-gray-700">{% trans "Response Speed" %}</span>
+                        <span class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs">{% trans "EXCELLENT" %}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl font-bold text-blue-600">{{ avg_response_time|default:2.4 }}h</span>
+                        <div class="text-right">
+                            <div class="text-xs text-green-600 font-semibold">↗ 15% {% trans "faster" %}</div>
+                            <div class="text-xs text-gray-500">{% trans "vs last month" %}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold text-gray-700">{% trans "Farmer Satisfaction" %}</span>
+                        <div class="flex text-yellow-400">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= farmer_rating|default:5 %}
+                                    <i class="fas fa-star text-sm"></i>
+                                {% else %}
+                                    <i class="far fa-star text-sm"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl font-bold text-green-600">{{ farmer_rating|floatformat:1|default:4.9 }}/5</span>
+                        <div class="text-right">
+                            <div class="text-xs text-green-600 font-semibold">📈 Top 5%</div>
+                            <div class="text-xs text-gray-500">{% trans "platform wide" %}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-semibold text-gray-700">{% trans "Expert Level" %}</span>
+                        <span class="bg-purple-500 text-white px-2 py-1 rounded-full text-xs">{{ expertise_level|default:"SENIOR" }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-lg font-bold text-purple-600">{% trans "Senior Expert" %}</span>
+                        <div class="text-right">
+                            <div class="text-xs text-purple-600 font-semibold">🏆 Rank #{{ monthly_ranking|default:1 }}</div>
+                            <div class="text-xs text-gray-500">{% trans "this month" %}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Performance Chart Placeholder -->
+            <div class="mt-6 p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl">
+                <div class="text-center">
+                    <i class="fas fa-chart-line text-3xl text-gray-400 mb-2"></i>
+                    <p class="text-sm text-gray-600">{% trans "Weekly Performance Trend" %}</p>
+                    <div class="mt-3 flex justify-between text-xs text-gray-500">
+                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                    </div>
+                    <div class="mt-1 flex items-end justify-between space-x-1">
+                        <div class="bg-blue-400 h-8 w-2 rounded-t"></div>
+                        <div class="bg-blue-500 h-10 w-2 rounded-t"></div>
+                        <div class="bg-blue-400 h-6 w-2 rounded-t"></div>
+                        <div class="bg-blue-600 h-12 w-2 rounded-t"></div>
+                        <div class="bg-blue-500 h-9 w-2 rounded-t"></div>
+                        <div class="bg-blue-400 h-7 w-2 rounded-t"></div>
+                        <div class="bg-blue-500 h-11 w-2 rounded-t"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Knowledge Base -->
+        <div class="bg-white rounded-xl shadow-2xl p-6 border border-gray-100">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-heading font-bold text-xl text-gray-900">
+                    <i class="fas fa-brain mr-3 text-indigo-600"></i>
+                    {% trans "Knowledge Center" %}
+                </h3>
+                <div class="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-xs font-semibold">
+                    {% trans "SMART" %}
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <button class="w-full group" onclick="openKnowledgeBase('templates')">
+                    <div class="text-left p-4 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 rounded-xl transition-all duration-300 transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="bg-indigo-500 rounded-full p-2 mr-4">
+                                    <i class="fas fa-file-alt text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-800">{% trans "AI Templates" %}</span>
+                                    <p class="text-xs text-indigo-600 mt-1">{% trans "Smart advice templates" %}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-indigo-600 font-semibold">{{ advice_templates_count|default:45 }}+</span>
+                                <i class="fas fa-robot text-indigo-400 ml-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+                
+                <button class="w-full group" onclick="openKnowledgeBase('crops')">
+                    <div class="text-left p-4 bg-gradient-to-r from-green-50 to-teal-50 hover:from-green-100 hover:to-teal-100 rounded-xl transition-all duration-300 transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="bg-green-500 rounded-full p-2 mr-4">
+                                    <i class="fas fa-seedling text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-800">{% trans "Crop Encyclopedia" %}</span>
+                                    <p class="text-xs text-green-600 mt-1">{% trans "Complete crop database" %}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-green-600 font-semibold">{% trans "500+" %}</span>
+                                <i class="fas fa-leaf text-green-400 ml-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+                
+                <button class="w-full group" onclick="openKnowledgeBase('diseases')">
+                    <div class="text-left p-4 bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100 rounded-xl transition-all duration-300 transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="bg-red-500 rounded-full p-2 mr-4">
+                                    <i class="fas fa-microscope text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-800">{% trans "Disease Lab" %}</span>
+                                    <p class="text-xs text-red-600 mt-1">{% trans "Diagnostic tools & guides" %}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-red-600 font-semibold">{% trans "200+" %}</span>
+                                <i class="fas fa-virus text-red-400 ml-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+                
+                <button class="w-full group" onclick="openKnowledgeBase('weather')">
+                    <div class="text-left p-4 bg-gradient-to-r from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 rounded-xl transition-all duration-300 transform group-hover:scale-105">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="bg-blue-500 rounded-full p-2 mr-4">
+                                    <i class="fas fa-cloud-sun text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <span class="font-semibold text-gray-800">{% trans "Weather Intel" %}</span>
+                                    <p class="text-xs text-blue-600 mt-1">{% trans "Real-time agro weather" %}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs">{% trans "LIVE" %}</span>
+                                <i class="fas fa-satellite text-blue-400 ml-2"></i>
+                            </div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- AI Assistant -->
+            <div class="mt-6 p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-xl border-2 border-dashed border-purple-200">
+                <div class="text-center">
+                    <i class="fas fa-robot text-2xl text-purple-500 mb-2"></i>
+                    <p class="text-sm font-semibold text-purple-700">{% trans "AI Research Assistant" %}</p>
+                    <p class="text-xs text-purple-600 mt-1">{% trans "Get instant research suggestions" %}</p>
+                    <button class="mt-3 bg-purple-500 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:bg-purple-600 transition duration-300">
+                        {% trans "Ask AI" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Premium Expert Action Center -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Answer Queries -->
+        <div class="group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3">
+            <div class="bg-gradient-to-br from-orange-500 via-red-500 to-pink-500 rounded-2xl shadow-2xl p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white bg-opacity-10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-16 h-16 bg-white bg-opacity-10 rounded-full -ml-8 -mb-8"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-2xl p-4 backdrop-blur-sm">
+                            <i class="fas fa-question-circle text-2xl"></i>
+                        </div>
+                        <div class="bg-yellow-400 text-orange-800 px-3 py-1 rounded-full text-xs font-bold animate-pulse">
+                            {{ pending_count|default:0 }} {% trans "PENDING" %}
+                        </div>
+                    </div>
+                    <h3 class="font-heading font-bold text-xl mb-2">{% trans "Answer Queries" %}</h3>
+                    <p class="text-orange-100 mb-4 text-sm leading-relaxed">{% trans "Farmers need your agricultural expertise" %}</p>
+                    <a href="{% url 'core:pending_queries' %}" class="inline-flex items-center bg-white text-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-50 transition duration-300 text-sm shadow-lg transform hover:scale-105">
+                        {% trans "Start Helping" %}
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- My Advice History -->
+        <div class="group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3">
+            <div class="bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl shadow-2xl p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white bg-opacity-10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-16 h-16 bg-white bg-opacity-10 rounded-full -ml-8 -mb-8"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-2xl p-4 backdrop-blur-sm">
+                            <i class="fas fa-lightbulb text-2xl"></i>
+                        </div>
+                        <div class="bg-green-400 text-green-800 px-3 py-1 rounded-full text-xs font-bold">
+                            {{ my_advice_count|default:0 }} {% trans "GIVEN" %}
+                        </div>
+                    </div>
+                    <h3 class="font-heading font-bold text-xl mb-2">{% trans "My Solutions" %}</h3>
+                    <p class="text-green-100 mb-4 text-sm leading-relaxed">{% trans "Review your expert advice history" %}</p>
+                    <a href="{% url 'core:my_advice' %}" class="inline-flex items-center bg-white text-green-600 px-6 py-3 rounded-xl font-bold hover:bg-green-50 transition duration-300 text-sm shadow-lg transform hover:scale-105">
+                        {% trans "View Portfolio" %}
+                        <i class="fas fa-chart-line ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expert Consultation -->
+        <div class="group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3">
+            <div class="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white bg-opacity-10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-16 h-16 bg-white bg-opacity-10 rounded-full -ml-8 -mb-8"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-2xl p-4 backdrop-blur-sm">
+                            <i class="fas fa-video text-2xl"></i>
+                        </div>
+                        <div class="bg-blue-400 text-blue-800 px-3 py-1 rounded-full text-xs font-bold">
+                            {% trans "LIVE" %}
+                        </div>
+                    </div>
+                    <h3 class="font-heading font-bold text-xl mb-2">{% trans "Video Consult" %}</h3>
+                    <p class="text-blue-100 mb-4 text-sm leading-relaxed">{% trans "Direct video consultation with farmers" %}</p>
+                    <button onclick="openVideoConsult()" class="inline-flex items-center bg-white text-blue-600 px-6 py-3 rounded-xl font-bold hover:bg-blue-50 transition duration-300 text-sm shadow-lg transform hover:scale-105">
+                        {% trans "Start Session" %}
+                        <i class="fas fa-play-circle ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Analytics -->
+        <div class="group hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3">
+            <div class="bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 rounded-2xl shadow-2xl p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-white bg-opacity-10 rounded-full -mr-12 -mt-12"></div>
+                <div class="absolute bottom-0 left-0 w-16 h-16 bg-white bg-opacity-10 rounded-full -ml-8 -mb-8"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="bg-white bg-opacity-20 rounded-2xl p-4 backdrop-blur-sm">
+                            <i class="fas fa-chart-pie text-2xl"></i>
+                        </div>
+                        <div class="bg-purple-400 text-purple-800 px-3 py-1 rounded-full text-xs font-bold">
+                            {% trans "PRO" %}
+                        </div>
+                    </div>
+                    <h3 class="font-heading font-bold text-xl mb-2">{% trans "AI Analytics" %}</h3>
+                    <p class="text-purple-100 mb-4 text-sm leading-relaxed">{% trans "Advanced insights and predictions" %}</p>
+                    <button onclick="openAdvancedAnalytics()" class="inline-flex items-center bg-white text-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-purple-50 transition duration-300 text-sm shadow-lg transform hover:scale-105">
+                        {% trans "View Dashboard" %}
+                        <i class="fas fa-brain ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity Enhanced -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Latest Pending Queries -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="font-heading font-semibold text-lg text-gray-900">
+                    <i class="fas fa-clock mr-2 text-yellow-500"></i>
+                    {% trans "Latest Pending Queries" %}
+                </h2>
+                <div class="flex space-x-2">
+                    <select id="query-filter" class="text-sm border border-gray-300 rounded-md px-3 py-1">
+                        <option value="all">{% trans "All Queries" %}</option>
+                        <option value="urgent">{% trans "Urgent Only" %}</option>
+                        <option value="recent">{% trans "Recent" %}</option>
+                    </select>
+                    <button onclick="refreshQueries()" class="text-sm bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700">
+                        <i class="fas fa-sync-alt mr-1"></i> {% trans "Refresh" %}
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                {% if pending_queries %}
+                    <div class="space-y-4" id="queries-list">
+                        {% for query in pending_queries %}
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-200 query-item" data-urgency="{{ query.urgency|default:'normal' }}" data-date="{{ query.created_at|date:'Y-m-d' }}">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <h3 class="font-medium text-gray-900">{{ query.title|truncatechars:40 }}</h3>
+                                        {% if query.urgency == 'urgent' %}
+                                            <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>{% trans "Urgent" %}
+                                            </span>
+                                        {% endif %}
+                                        {% if query.crop_type %}
+                                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                                {{ query.crop_type|title }}
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                        <span><i class="fas fa-user mr-1"></i>{{ query.farmer.get_full_name }}</span>
+                                        <span><i class="fas fa-map-marker-alt mr-1"></i>{{ query.farmer.city|default:"Location N/A" }}</span>
+                                        <span><i class="fas fa-clock mr-1"></i>{{ query.created_at|timesince }} {% trans "ago" %}</span>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="quickView({{ query.pk }})" class="text-blue-600 hover:text-blue-800" title="{% trans 'Quick View' %}">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <a href="{% url 'core:provide_advice' query.pk %}" class="text-green-600 hover:text-green-800" title="{% trans 'Provide Advice' %}">
+                                        <i class="fas fa-reply"></i>
+                                    </a>
+                                    <button onclick="saveForLater({{ query.pk }})" class="text-gray-600 hover:text-gray-800" title="{% trans 'Save for Later' %}">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-6 text-center">
+                        <a href="{% url 'core:pending_queries' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium">
+                            {% trans "View All Pending Queries" %}
+                            <i class="fas fa-arrow-right ml-2"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-check-circle text-4xl text-green-300 mb-4"></i>
+                        <p class="text-gray-600 text-lg">{% trans "Excellent work! No pending queries." %}</p>
+                        <p class="text-gray-500 text-sm mt-2">{% trans "All farmers have been helped. Check back later for new queries." %}</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Enhanced Recent Advice & Analytics -->
+        <div class="space-y-6">
+            <!-- Recent Advice -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="font-heading font-semibold text-lg text-gray-900">
+                        <i class="fas fa-lightbulb mr-2 text-green-500"></i>
+                        {% trans "Recent Advice Given" %}
+                    </h2>
+                </div>
+                <div class="p-6">
+                    {% if recent_advice %}
+                        <div class="space-y-4">
+                            {% for advice in recent_advice %}
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex-1">
+                                            <h3 class="font-medium text-gray-900">{{ advice.query.title|truncatechars:35 }}</h3>
+                                            <p class="text-sm text-gray-600 mt-1">{% trans "To" %}: {{ advice.query.farmer.get_full_name }}</p>
+                                            <div class="flex items-center space-x-4 mt-2">
+                                                <span class="text-xs text-gray-500">{{ advice.created_at|timesince }} {% trans "ago" %}</span>
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                                    {% if advice.confidence_level == 'high' %}bg-green-100 text-green-800
+                                                    {% elif advice.confidence_level == 'medium' %}bg-yellow-100 text-yellow-800
+                                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                                    <i class="fas fa-star mr-1"></i>{{ advice.get_confidence_level_display }} {% trans "Confidence" %}
+                                                </span>
+                                                {% if advice.rating %}
+                                                    <div class="flex items-center">
+                                                        <div class="flex text-yellow-400 text-xs">
+                                                            {% for i in "12345"|make_list %}
+                                                                {% if forloop.counter <= advice.rating %}
+                                                                    <i class="fas fa-star"></i>
+                                                                {% else %}
+                                                                    <i class="far fa-star"></i>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                        <span class="text-xs text-gray-500 ml-1">({{ advice.rating }}/5)</span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <a href="{% url 'core:query_detail' advice.query.pk %}" class="text-green-600 hover:text-green-800">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-4 text-center">
+                            <a href="{% url 'core:my_advice' %}" class="text-green-600 hover:text-green-800 font-medium">
+                                {% trans "View All My Advice" %} →
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-6">
+                            <i class="fas fa-clipboard-list text-3xl text-gray-300 mb-3"></i>
+                            <p class="text-gray-600">{% trans "No advice given yet" %}</p>
+                            <p class="text-gray-500 text-sm mt-1">{% trans "Start helping farmers by answering their queries" %}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="font-heading font-semibold text-lg text-gray-900">
+                        <i class="fas fa-chart-pie mr-2 text-purple-500"></i>
+                        {% trans "Weekly Summary" %}
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center p-3 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600">{{ queries_answered_this_week|default:0 }}</div>
+                            <div class="text-sm text-gray-600">{% trans "Queries Answered" %}</div>
+                        </div>
+                        <div class="text-center p-3 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600">{{ avg_rating_this_week|floatformat:1|default:"N/A" }}</div>
+                            <div class="text-sm text-gray-600">{% trans "Avg Rating" %}</div>
+                        </div>
+                        <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                            <div class="text-2xl font-bold text-yellow-600">{{ response_time_hours|default:0 }}h</div>
+                            <div class="text-sm text-gray-600">{% trans "Avg Response" %}</div>
+                        </div>
+                        <div class="text-center p-3 bg-purple-50 rounded-lg">
+                            <div class="text-2xl font-bold text-purple-600">{{ farmers_helped_this_week|default:0 }}</div>
+                            <div class="text-sm text-gray-600">{% trans "Farmers Helped" %}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expert Tools Section -->
+    <div class="bg-white rounded-lg shadow mt-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="font-heading font-semibold text-lg text-gray-900">
+                <i class="fas fa-tools mr-2 text-indigo-500"></i>
+                {% trans "Expert Tools & Resources" %}
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Weather Integration -->
+                <div class="p-4 border border-gray-200 rounded-lg">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-cloud-sun text-2xl text-blue-500 mr-3"></i>
+                        <h3 class="font-semibold text-gray-900">{% trans "Weather Insights" %}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">{% trans "Check regional weather to provide better farming advice" %}</p>
+                    <a href="{% url 'core:expert_weather_insights' %}" class="text-sm bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 inline-block">
+                        {% trans "View Weather Data" %}
+                    </a>
+                </div>
+
+                <!-- Crop Calculator -->
+                <div class="p-4 border border-gray-200 rounded-lg">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-calculator text-2xl text-green-500 mr-3"></i>
+                        <h3 class="font-semibold text-gray-900">{% trans "Crop Calculator" %}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">{% trans "Calculate fertilizer doses, seed rates, and crop yields" %}</p>
+                    <a href="{% url 'core:expert_crop_calculator' %}" class="text-sm bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 inline-block">
+                        {% trans "Open Calculator" %}
+                    </a>
+                </div>
+
+                <!-- Disease Database -->
+                <div class="p-4 border border-gray-200 rounded-lg">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-microscope text-2xl text-red-500 mr-3"></i>
+                        <h3 class="font-semibold text-gray-900">{% trans "Disease Reference" %}</h3>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">{% trans "Access comprehensive disease and pest identification guide" %}</p>
+                    <a href="{% url 'core:expert_disease_reference' %}" class="text-sm bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 inline-block">
+                        {% trans "Browse Database" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick View Modal -->
+<div id="quick-view-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">{% trans "Query Details" %}</h3>
+            </div>
+            <div class="p-6">
+                <div id="quick-view-content">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button onclick="closeQuickView()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400">
+                    {% trans "Close" %}
+                </button>
+                <button id="provide-advice-btn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+                    {% trans "Provide Advice" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Query filtering
+    const queryFilter = document.getElementById('query-filter');
+    if (queryFilter) {
+        queryFilter.addEventListener('change', function() {
+            filterQueries(this.value);
+        });
+    }
+});
+
+function filterQueries(filter) {
+    const queries = document.querySelectorAll('.query-item');
+    queries.forEach(query => {
+        let show = true;
+        
+        if (filter === 'urgent') {
+            show = query.dataset.urgency === 'urgent';
+        } else if (filter === 'recent') {
+            const queryDate = new Date(query.dataset.date);
+            const threeDaysAgo = new Date();
+            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+            show = queryDate >= threeDaysAgo;
+        }
+        
+        query.style.display = show ? 'flex' : 'none';
+    });
+}
+
+function refreshQueries() {
+    // Refresh the queries list
+    window.location.reload();
+}
+
+function quickView(queryId) {
+    // Open quick view modal
+    const modal = document.getElementById('quick-view-modal');
+    const content = document.getElementById('quick-view-content');
+    const adviceBtn = document.getElementById('provide-advice-btn');
+    
+    // Set up the provide advice button
+    adviceBtn.onclick = () => {
+        window.location.href = `/query/${queryId}/advice/`;
+    };
+    
+    // Load query content (you can make an AJAX call here)
+    content.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i><p class="text-gray-600 mt-2">Loading query details...</p></div>';
+    
+    modal.classList.remove('hidden');
+}
+
+function closeQuickView() {
+    document.getElementById('quick-view-modal').classList.add('hidden');
+}
+
+function saveForLater(queryId) {
+    // Save query for later (you can implement this with AJAX)
+    alert('Query saved for later!');
+}
+
+function openVideoConsult() {
+    alert('Video consultation feature will be available soon! Stay tuned for direct farmer connectivity.');
+}
+
+function openAdvancedAnalytics() {
+    alert('Advanced AI Analytics dashboard is coming soon! Get ready for predictive insights.');
+}
+
+function openKnowledgeBase(type) {
+    alert(`${type} knowledge base coming soon!`);
+}
+
+function openWeatherTool() {
+    alert('Weather integration tool coming soon!');
+}
+
+function openCropCalculator() {
+    alert('Crop calculator tool coming soon!');
+}
+
+function openDiseaseDatabase() {
+    alert('Disease reference database coming soon!');
+}
+
+// GPS Location Detection and Update
+function updateLocationDisplay(latitude, longitude) {
+    // Reverse geocode using Nominatim
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+        .then(response => response.json())
+        .then(data => {
+            const address = data.address || {};
+            const city = address.city || address.town || address.village || 'Unknown';
+            const state = address.state || '';
+            const country = address.country || '';
+            
+            // Format location display
+            let locationDisplay = `${city}`;
+            if (state) locationDisplay += `, ${state}`;
+            if (country) locationDisplay += `, ${country}`;
+            
+            // Update UI
+            document.getElementById('dashboard-location').textContent = locationDisplay;
+            document.getElementById('dashboard-coordinates').textContent = 
+                `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            
+            console.log(`Location updated: ${locationDisplay}`);
+        })
+        .catch(error => {
+            console.log('Reverse geocoding error:', error);
+            document.getElementById('dashboard-location').textContent = 'Location unavailable';
+            document.getElementById('dashboard-coordinates').textContent = 
+                `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+        });
+}
+
+function detectDashboardLocation() {
+    if (!navigator.geolocation) {
+        document.getElementById('dashboard-location').textContent = 'Geolocation not supported';
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log(`GPS detected: ${latitude}, ${longitude}`);
+            updateLocationDisplay(latitude, longitude);
+        },
+        (error) => {
+            console.log('Geolocation error:', error.message);
+            document.getElementById('dashboard-location').textContent = 'Location permission denied';
+            document.getElementById('dashboard-coordinates').textContent = 'Please enable location services';
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+// Refresh location button
+document.getElementById('refresh-location-btn').addEventListener('click', () => {
+    document.getElementById('dashboard-location').textContent = 'Detecting location...';
+    document.getElementById('dashboard-coordinates').textContent = 'GPS: Waiting...';
+    detectDashboardLocation();
+});
+
+// Detect location on page load
+detectDashboardLocation();
+</script>
+
+{% endblock %}

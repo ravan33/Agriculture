@@ -1,0 +1,327 @@
+﻿{% extends 'base.html' %}
+{% load math_filters %}
+
+{% block title %}{{ page_title }} | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <a href="{% url 'core:query_history' %}" class="text-kisan-green hover:text-green-700 font-medium mb-2 inline-block">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to My Queries
+                </a>
+                <h1 class="font-heading font-bold text-3xl text-gray-900">{{ query.title }}</h1>
+                <p class="text-gray-600 mt-2">Query details and expert responses</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="px-3 py-1 text-sm font-medium rounded-full
+                    {% if query.status == 'pending' %}
+                        bg-yellow-100 text-yellow-800
+                    {% elif query.status == 'answered' %}
+                        bg-green-100 text-green-800
+                    {% else %}
+                        bg-gray-100 text-gray-800
+                    {% endif %}">
+                    {% if query.status == 'pending' %}
+                        <i class="fas fa-clock mr-1"></i>Pending
+                    {% elif query.status == 'answered' %}
+                        <i class="fas fa-check mr-1"></i>Answered
+                    {% else %}
+                        <i class="fas fa-times-circle mr-1"></i>Closed
+                    {% endif %}
+                </span>
+                {% if advice_responses %}
+                    <a href="{% url 'core:generate_pdf' query.id %}" 
+                       class="bg-red-500 text-white px-4 py-2 rounded-md font-medium hover:bg-red-600 transition duration-300">
+                        <i class="fas fa-file-pdf mr-1"></i>
+                        Download PDF
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Query Information -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="px-6 py-4 bg-gradient-to-r from-kisan-green to-green-600 text-white">
+            <h2 class="font-heading font-semibold text-lg flex items-center">
+                <i class="fas fa-question-circle mr-2"></i>
+                Query Information</h2>
+        </div>
+        
+        <div class="p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Query Details -->
+                <div>
+                    <h3 class="font-medium text-gray-900 mb-4">Description:</h3>
+                    <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                        <p class="text-gray-700 whitespace-pre-line">{{ query.description }}</p>
+                    </div>
+                    
+                    <!-- Query Metadata -->
+                    <div class="space-y-3">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-user mr-3 text-kisan-green w-4"></i>
+                            <span class="font-medium">Farmer:</span>
+                            <span class="ml-2">{{ query.farmer.get_full_name }}</span>
+                        </div>
+                        
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-calendar mr-3 text-kisan-green w-4"></i>
+                            <span class="font-medium">Submitted:</span>
+                            <span class="ml-2">{{ query.created_at|date:"F d, Y \a\t H:i" }}</span>
+                        </div>
+                        
+                        {% if query.updated_at != query.created_at %}
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-edit mr-3 text-kisan-green w-4"></i>
+                                <span class="font-medium">Last Updated:</span>
+                                <span class="ml-2">{{ query.updated_at|date:"F d, Y \a\t H:i" }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i class="fas fa-comments mr-3 text-kisan-green w-4"></i>
+                            <span class="font-medium">Expert Responses:</span>
+                            <span class="ml-2">{{ advice_responses.count }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Query Image -->
+                {% if query.crop_image %}
+                    <div>
+                        <h3 class="font-medium text-gray-900 mb-4">Crop Image:</h3>
+                        <div class="bg-gray-100 rounded-lg overflow-hidden">
+                            <img src="{{ query.crop_image.url }}" alt="Crop issue image" 
+                                 class="w-full h-80 object-cover cursor-pointer hover:opacity-90 transition duration-300"
+                                 onclick="openImageModal('{{ query.crop_image.url }}')">
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2 text-center">
+                            <i class="fas fa-expand-alt mr-1"></i>
+                            Click to view full size
+                        </p>
+                    </div>
+                {% else %}
+                    <div class="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
+                        <i class="fas fa-image text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-500">No image provided with this query</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expert Responses -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <h2 class="font-heading font-semibold text-lg flex items-center">
+                <i class="fas fa-user-md mr-2"></i>
+                Expert Responses -   ({{ advice_responses.count }})
+            </h2>
+        </div>
+        
+        <div class="p-6">
+            {% if advice_responses %}
+                <div class="space-y-6">
+                    {% for advice in advice_responses %}
+                        <div class="border border-green-200 rounded-lg overflow-hidden">
+                            <!-- Expert Header -->
+                            <div class="bg-green-50 px-6 py-4 border-b border-green-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="bg-green-100 rounded-full p-3">
+                                            <i class="fas fa-user-md text-green-600"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-green-900">
+                                                Dr. {{ advice.expert.get_full_name }}
+                                            </h3>
+                                            {% if advice.expert.profile.specialization %}
+                                                <p class="text-sm text-green-700">
+                                                    <i class="fas fa-graduation-cap mr-1"></i>
+                                                    {{ advice.expert.profile.specialization }}
+                                                </p>
+                                            {% endif %}
+                                            {% if advice.expert.profile.experience_years %}
+                                                <p class="text-sm text-green-600">
+                                                    <i class="fas fa-calendar-alt mr-1"></i>
+                                                    {{ advice.expert.profile.experience_years }} years experience
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm text-green-600 font-medium">
+                                            {{ advice.created_at|date:"M d, Y" }}
+                                        </p>
+                                        <p class="text-xs text-green-500">
+                                            {{ advice.created_at|date:"H:i" }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Expert Advice Content -->
+                            <div class="p-6">
+                                <div class="prose max-w-none">
+                                    <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ advice.content }}</p>
+                                </div>
+                                
+                                <!-- Rating Section (if implemented) -->
+                                <div class="mt-4 pt-4 border-t border-gray-200">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2 text-sm text-gray-600">
+                                            <i class="fas fa-thumbs-up"></i>
+                                            <span>Was this advice helpful?</span>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-green-600 hover:text-green-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-green-50 transition duration-300">
+                                                <i class="fas fa-thumbs-up mr-1"></i>
+                                                Helpful
+                                            </button>
+                                            <button class="text-gray-600 hover:text-gray-700 px-3 py-1 rounded-md text-sm font-medium hover:bg-gray-50 transition duration-300">
+                                                <i class="fas fa-comment mr-1"></i>
+                                                Follow-up
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Summary Actions -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <div class="bg-blue-50 rounded-lg p-6">
+                        <h3 class="font-semibold text-blue-900 mb-3">
+                            <i class="fas fa-lightbulb mr-2"></i>
+                            Next Steps
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <p class="text-blue-800 text-sm">
+                                    <i class="fas fa-check mr-2"></i>
+                                    Apply the recommended solutions
+                                </p>
+                                <p class="text-blue-800 text-sm">
+                                    <i class="fas fa-check mr-2"></i>
+                                    Monitor your crop for improvements
+                                </p>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-blue-800 text-sm">
+                                    <i class="fas fa-check mr-2"></i>
+                                    Follow expert's timeline suggestions
+                                </p>
+                                <p class="text-blue-800 text-sm">
+                                    <i class="fas fa-check mr-2"></i>
+                                    Ask follow-up questions if needed
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            {% else %}
+                <!-- No Responses State -->
+                <div class="text-center py-12">
+                    <div class="mx-auto h-24 w-24 text-gray-400">
+                        <i class="fas fa-hourglass-half text-6xl"></i>
+                    </div>
+                    <h3 class="mt-4 text-lg font-medium text-gray-900">Waiting for Expert Response</h3>
+                    <p class="mt-2 text-gray-500 max-w-md mx-auto">
+                        Your query has been submitted successfully. Our agricultural experts will review it and provide detailed advice soon.
+                    </p>
+                    
+                    <!-- Expected Response Time -->
+                    <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md mx-auto">
+                        <div class="flex items-center justify-center text-yellow-800">
+                            <i class="fas fa-clock mr-2"></i>
+                            <span class="font-medium">Expected Response Time: 2-24 hours</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Actions -->
+                    <div class="mt-8 space-x-4">
+                        <a href="{% url 'core:create_query' %}" 
+                           class="bg-kisan-green text-white px-6 py-2 rounded-md font-medium hover:bg-green-700 transition duration-300">
+                            <i class="fas fa-plus mr-2"></i>
+                            Ask Another Question
+                        </a>
+                        <a href="{% url 'core:ai_diagnose' %}" 
+                           class="bg-purple-600 text-white px-6 py-2 rounded-md font-medium hover:bg-purple-700 transition duration-300">
+                            <i class="fas fa-brain mr-2"></i>
+                            Try AI Diagnosis
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50 flex items-center justify-center" onclick="closeImageModal()">
+    <div class="max-w-6xl max-h-full p-4 relative">
+        <img id="modalImage" src="" alt="Crop image" class="max-w-full max-h-full object-contain rounded-lg">
+        <button class="absolute top-4 right-4 text-white text-2xl hover:text-gray-300 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center" onclick="closeImageModal()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Image modal functionality
+function openImageModal(imageSrc) {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    modalImage.src = imageSrc;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Handle escape key for modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+
+// Auto-scroll to responses if they exist
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('scroll') === 'responses') {
+        document.querySelector('.bg-gradient-to-r.from-green-500').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+});
+
+// Helpful button functionality
+document.querySelectorAll('button').forEach(button => {
+    if (button.textContent.includes('Helpful')) {
+        button.addEventListener('click', function() {
+            this.innerHTML = '<i class="fas fa-check mr-1"></i>Thank you!';
+            this.classList.remove('text-green-600', 'hover:text-green-700');
+            this.classList.add('text-green-800', 'bg-green-100');
+            this.disabled = true;
+        });
+    }
+});
+</script>
+{% endblock %}
+

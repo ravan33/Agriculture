@@ -1,0 +1,406 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Pending Queries | Expert Dashboard{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="font-heading font-bold text-3xl text-gray-900 flex items-center">
+                    <i class="fas fa-clock mr-3 text-amber-600"></i>
+                    Pending Queries
+                </h1>
+                <p class="text-gray-600 mt-2">  - Queries awaiting your expert advice</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-600">
+                    <span class="font-medium">{{ pending_count|default:0 }}</span> pending queries
+                </div>
+                <a href="{% url 'core:dashboard' %}" 
+                   class="text-gray-500 hover:text-gray-700 font-medium">
+                    <i class="fas fa-arrow-left mr-1"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters and Search -->
+    <div class="mb-6 bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex-1">
+                <div class="relative">
+                    <input type="text" 
+                           placeholder="Search by farmer name, crop, or symptoms..." 
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-kisan-green focus:border-transparent">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <select class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-kisan-green">
+                    <option>All Crops</option>
+                    <option>Rice</option>
+                    <option>Wheat</option>
+                    <option>Cotton</option>
+                    <option>Sugarcane</option>
+                    <option>Other</option>
+                </select>
+                <select class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-kisan-green">
+                    <option>Sort by Date</option>
+                    <option>Oldest First</option>
+                    <option>Newest First</option>
+                    <option>By Priority</option>
+                </select>
+                <button class="bg-kisan-green text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-300 text-sm">
+                    <i class="fas fa-filter mr-1"></i>
+                    Apply
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="bg-amber-100 rounded-full p-3">
+                    <i class="fas fa-clock text-amber-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Total Pending</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ pending_count|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="bg-red-100 rounded-full p-3">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Urgent (>48h)</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ urgent_count|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="bg-blue-100 rounded-full p-3">
+                    <i class="fas fa-calendar-day text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Today's Queries</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ today_count|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Avg Response Time</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ avg_response_time|default:"24h" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Queries List -->
+    {% if queries %}
+        <div class="space-y-6">
+            {% for query in queries %}
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden border-l-4 
+                    {% if query.created_at|timesince|slice:':2' == '2 ' or query.created_at|timesince|slice:':3' == '3 d' %}
+                        border-red-500
+                    {% elif query.created_at|timesince|slice:':1' == '1' %}
+                        border-amber-500
+                    {% else %}
+                        border-blue-500
+                    {% endif %}">
+                    
+                    <div class="p-6">
+                        <div class="flex items-start justify-between">
+                            <!-- Query Info -->
+                            <div class="flex-1">
+                                <div class="flex items-center mb-3">
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Farmer Avatar -->
+                                        <div class="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center">
+                                            <i class="fas fa-user text-gray-600"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="font-semibold text-lg text-gray-900">
+                                                {{ query.farmer.get_full_name|default:query.farmer.username }}
+                                            </h3>
+                                            <p class="text-sm text-gray-600">{{ query.farmer.location|default:"Location not specified" }}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Priority Badge -->
+                                    <span class="ml-4 px-2 py-1 text-xs font-medium rounded-full
+                                        {% if query.created_at|timesince|slice:':2' == '2 ' or query.created_at|timesince|slice:':3' == '3 d' %}
+                                            bg-red-100 text-red-800
+                                        {% elif query.created_at|timesince|slice:':1' == '1' %}
+                                            bg-amber-100 text-amber-800
+                                        {% else %}
+                                            bg-blue-100 text-blue-800
+                                        {% endif %}">
+                                        {% if query.created_at|timesince|slice:':2' == '2 ' or query.created_at|timesince|slice:':3' == '3 d' %}
+                                            Urgent
+                                        {% elif query.created_at|timesince|slice:':1' == '1' %}
+                                            Priority
+                                        {% else %}
+                                            Normal
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <!-- Query Details -->
+                                <div class="space-y-3">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                        <div class="flex items-center text-gray-600">
+                                            <i class="fas fa-seedling mr-2 text-green-600"></i>
+                                            <span class="font-medium">Crop:</span>
+                                            <span class="ml-1">{{ query.crop_type|title }}</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-600">
+                                            <i class="fas fa-map-marker-alt mr-2 text-red-600"></i>
+                                            <span class="font-medium">Location:</span>
+                                            <span class="ml-1">{{ query.location|default:"Not specified" }}</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-600">
+                                            <i class="fas fa-clock mr-2 text-blue-600"></i>
+                                            <span class="font-medium">Posted:</span>
+                                            <span class="ml-1">{{ query.created_at|timesince }} ago</span>
+                                        </div>
+                                        <div class="flex items-center text-gray-600">
+                                            <i class="fas fa-thermometer-half mr-2 text-amber-600"></i>
+                                            <span class="font-medium">Urgency:</span>
+                                            <span class="ml-1">{{ query.urgency|default:"Medium" }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Symptoms -->
+                                    <div class="bg-gray-50 rounded-lg p-4">
+                                        <h4 class="font-medium text-gray-900 mb-2 flex items-center">
+                                            <i class="fas fa-stethoscope mr-2 text-purple-600"></i>
+                                            Symptoms & Description:
+                                        </h4>
+                                        <p class="text-gray-700 leading-relaxed">{{ query.symptoms }}</p>
+                                    </div>
+                                    
+                                    <!-- Images -->
+                                    {% if query.crop_image %}
+                                        <div>
+                                            <h4 class="font-medium text-gray-900 mb-2 flex items-center">
+                                                <i class="fas fa-images mr-2 text-indigo-600"></i>
+                                                Crop Images:
+                                            </h4>
+                                            <div class="flex space-x-3">
+                                                <img src="{{ query.crop_image.url }}" 
+                                                     alt="Crop image" 
+                                                     class="w-24 h-24 object-cover rounded-lg border cursor-pointer hover:opacity-75 transition duration-300"
+                                                     onclick="openImageModal('{{ query.crop_image.url }}')">
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="ml-6 flex flex-col space-y-3">
+                                <a href="{% url 'core:provide_advice' query.id %}" 
+                                   class="bg-kisan-green text-white px-6 py-3 rounded-md font-semibold hover:bg-green-700 transition duration-300 text-center">
+                                    <i class="fas fa-reply mr-2"></i>
+                                    Provide Advice
+                                </a>
+                                
+                                <button onclick="markAsUrgent({{ query.id }})" 
+                                        class="bg-amber-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-amber-600 transition duration-300">
+                                    <i class="fas fa-exclamation mr-2"></i>
+                                    Mark Urgent
+                                </button>
+                                
+                                <button onclick="viewFarmerProfile({{ query.farmer.id }})" 
+                                        class="bg-blue-500 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-600 transition duration-300">
+                                    <i class="fas fa-user mr-2"></i>
+                                    View Profile
+                                </button>
+                                
+                                <button onclick="addToWatch({{ query.id }})" 
+                                        class="border border-gray-300 text-gray-700 px-6 py-3 rounded-md font-semibold hover:bg-gray-50 transition duration-300">
+                                    <i class="fas fa-bookmark mr-2"></i>
+                                    Watch
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+            <div class="mt-8 flex justify-center">
+                <nav class="flex items-center space-x-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                            Previous
+                        </a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span class="px-3 py-2 text-sm font-medium bg-kisan-green text-white border border-kisan-green rounded-md">
+                                {{ num }}
+                            </span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a href="?page={{ num }}" 
+                               class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                                {{ num }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" 
+                           class="px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                            Next
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <div class="bg-green-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-check-circle text-4xl text-green-600"></i>
+            </div>
+            <h3 class="font-heading font-semibold text-xl text-gray-900 mb-2">All Caught Up!</h3>
+            <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                Great job! There are no pending queries at the moment. Check back later for new farmer questions.
+            </p>
+            <a href="{% url 'core:dashboard' %}" 
+               class="bg-kisan-green text-white px-8 py-3 rounded-md font-semibold hover:bg-green-700 transition duration-300">
+                <i class="fas fa-dashboard mr-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-4xl max-h-full overflow-auto">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="font-semibold text-lg">Crop Image</h3>
+            <button onclick="closeImageModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <img id="modalImage" src="" alt="Crop image" class="max-w-full h-auto">
+        </div>
+    </div>
+</div>
+
+<script>
+function openImageModal(imageSrc) {
+    document.getElementById('modalImage').src = imageSrc;
+    document.getElementById('imageModal').classList.remove('hidden');
+}
+
+function closeImageModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+}
+
+function markAsUrgent(queryId) {
+    if (confirm('Mark this query as urgent? This will prioritize it in the list.')) {
+        // AJAX call to mark as urgent
+        fetch(`/expert/mark-urgent/${queryId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error marking query as urgent');
+            }
+        });
+    }
+}
+
+function viewFarmerProfile(farmerId) {
+    // Open farmer profile in new window/tab
+    window.open(`/farmer/profile/${farmerId}/`, '_blank');
+}
+
+function addToWatch(queryId) {
+    // AJAX call to add to watch list
+    fetch(`/expert/watch/${queryId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Added to your watch list');
+        } else {
+            alert('Error adding to watch list');
+        }
+    });
+}
+
+// Auto-refresh every 5 minutes to check for new queries
+setInterval(() => {
+    // Check for new queries without full page reload
+    fetch(window.location.href + '?ajax=1')
+    .then(response => response.json())
+    .then(data => {
+        if (data.new_queries_count > 0) {
+            // Show notification about new queries
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-kisan-green text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            notification.innerHTML = `
+                <i class="fas fa-bell mr-2"></i>
+                ${data.new_queries_count} new queries available
+                <button onclick="location.reload()" class="ml-3 underline">Refresh</button>
+                <button onclick="this.parentElement.remove()" class="ml-2">×</button>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 10000);
+        }
+    });
+}, 300000); // 5 minutes
+
+// Close modal when clicking outside
+document.getElementById('imageModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeImageModal();
+    }
+});
+</script>
+{% endblock %}
+

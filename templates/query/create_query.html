@@ -1,0 +1,191 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | AgriVision AI{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="font-heading font-bold text-3xl text-gray-900">{{ page_title }}</h1>
+        <p class="text-gray-600 mt-2">Describe your crop problem and get expert advice</p>
+    </div>
+    
+    <!-- Form Card -->
+    <div class="bg-white rounded-lg shadow-lg">
+        <div class="px-6 py-4 border-b border-gray-200 bg-kisan-green bg-opacity-5">
+            <h2 class="font-heading font-semibold text-lg text-gray-900 flex items-center">
+                <i class="fas fa-question-circle text-kisan-green mr-2"></i>
+                Submit Your Query</h2>
+        </div>
+        
+        <div class="p-6">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Title Field -->
+                <div>
+                    <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-heading mr-1 text-kisan-green"></i>
+                        Problem Title -    *
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.title.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">
+                        Provide a brief, clear title for your crop issue (e.g., "Yellow spots on tomato leaves")
+                    </p>
+                </div>
+                
+                <!-- Description Field -->
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-file-alt mr-1 text-kisan-green"></i>
+                        Detailed Description -   *
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.description.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">
+                        Please provide detailed information about:
+                        <br>• Symptoms you've observed
+                        <br>• When the problem started
+                        <br>• Weather conditions
+                        <br>• Previous treatments tried (if any)
+                        <br>• Crop variety and growth stage
+                    </p>
+                </div>
+                
+                <!-- Image Upload Field -->
+                <div>
+                    <label for="{{ form.crop_image.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-camera mr-1 text-kisan-green"></i>
+                        Crop Image -    *
+                    </label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-kisan-green transition duration-300">
+                        <div class="space-y-1 text-center">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="{{ form.crop_image.id_for_label }}" class="relative cursor-pointer bg-white rounded-md font-medium text-kisan-green hover:text-green-700 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-kisan-green">
+                                    <span>Upload a file</span>
+                                    {{ form.crop_image }}
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">PNG, JPG, JPEG up to 10MB</p>
+                        </div>
+                    </div>
+                    {% if form.crop_image.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {% for error in form.crop_image.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-1 text-sm text-gray-500">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                        <strong>Tip:</strong> Take clear, well-lit photos showing the affected parts of your crop for better diagnosis.
+                    </p>
+                </div>
+                
+                <!-- Important Notice -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">
+                                How it works</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li>Your query will be sent to our qualified agricultural experts</li>
+                                    <li>You'll receive a notification when an expert responds</li>
+                                    <li>Response time is typically 24-48 hours</li>
+                                    <li>You can view all your queries and responses in your dashboard</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Terms Agreement -->
+                <div class="flex items-start">
+                    <input id="terms" name="terms" type="checkbox" required class="h-4 w-4 text-kisan-green focus:ring-kisan-green border-gray-300 rounded mt-1">
+                    <label for="terms" class="ml-2 block text-sm text-gray-700">
+                        I confirm that the information provided is accurate and I agree to follow expert recommendations responsibly.
+                    </label>
+                </div>
+                
+                <!-- Submit Button -->
+                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
+                    <a href="{% url 'core:dashboard' %}" class="text-gray-500 hover:text-gray-700 font-medium">
+                        <i class="fas fa-arrow-left mr-1"></i>
+                        Back to Dashboard
+                    </a>
+                    <button type="submit" class="bg-kisan-green text-white px-8 py-3 rounded-md font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-kisan-green focus:ring-offset-2 transition duration-300">
+                        <i class="fas fa-paper-plane mr-2"></i>
+                        Submit Query</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Help Section -->
+    <div class="mt-8 bg-gradient-to-r from-kisan-green to-green-600 rounded-lg p-6 text-white">
+        <h3 class="font-heading font-semibold text-lg mb-4">
+            <i class="fas fa-hands-helping mr-2"></i>
+            Need Help? -  ?
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="font-medium mb-2">Quick Tips for Better Responses:</h4>
+                <ul class="text-green-100 space-y-1 text-sm">
+                    <li>• Be specific about symptoms</li>
+                    <li>• Include timing information</li>
+                    <li>• Mention your location/climate</li>
+                    <li>• Upload clear, focused images</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-medium mb-2">Alternative Options:</h4>
+                <div class="space-y-2 text-sm">
+                    <a href="{% url 'core:ai_diagnose' %}" class="block text-green-100 hover:text-white">
+                        <i class="fas fa-brain mr-1"></i>
+                        Try AI Diagnosis for instant results
+                    </a>
+                    <a href="{% url 'core:crop_library' %}" class="block text-green-100 hover:text-white">
+                        <i class="fas fa-book mr-1"></i>
+                        Browse Crop Planning Library
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// File upload preview
+document.getElementById('{{ form.crop_image.id_for_label }}').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // You can add image preview functionality here
+            console.log('Image selected:', file.name);
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}
+
