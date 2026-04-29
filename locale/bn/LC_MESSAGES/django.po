@@ -1,0 +1,670 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 15:04+0530\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: .\agri_connect\settings.py:128
+msgid "English"
+msgstr "ইংরেজি"
+
+#: .\agri_connect\settings.py:129
+msgid "Hindi"
+msgstr "হিন্দি"
+
+#: .\agri_connect\settings.py:130
+msgid "Telugu"
+msgstr "তেলুগু"
+
+#: .\agri_connect\settings.py:131
+msgid "Marathi"
+msgstr "মারাঠি"
+
+#: .\agri_connect\settings.py:132
+msgid "Tamil"
+msgstr "তামিল"
+
+#: .\agri_connect\settings.py:133
+msgid "Bengali"
+msgstr "বাংলা"
+
+#: .\agri_connect\settings.py:134
+msgid "Gujarati"
+msgstr "গুজরাটি"
+
+#: .\agri_connect\settings.py:135
+msgid "Kannada"
+msgstr "কন্নড়"
+
+#: .\agri_connect\settings.py:136
+msgid "Punjabi"
+msgstr "পাঞ্জাবি"
+
+#: .\core\models.py:13
+msgid "Farmer"
+msgstr ""
+
+#: .\core\models.py:14
+msgid "Expert"
+msgstr ""
+
+#: .\core\models.py:21
+msgid "Type of user: Farmer or Expert"
+msgstr ""
+
+#: .\core\models.py:27
+msgid "Contact phone number"
+msgstr ""
+
+#: .\core\models.py:32
+msgid "Physical address"
+msgstr ""
+
+#: .\core\models.py:38
+msgid "City for weather forecast, e.g., Hyderabad"
+msgstr ""
+
+#: .\core\models.py:43
+msgid "Badges earned by the user"
+msgstr ""
+
+#: .\templates\base.html:66
+msgid "Mera Manch"
+msgstr ""
+
+#: .\templates\base.html:68
+msgid "Salah Kendra"
+msgstr ""
+
+#: .\templates\base.html:70 .\templates\dashboard\farmer_dashboard.html:4
+#: .\templates\landing.html:21
+msgid "AgriVision AI"
+msgstr ""
+
+#: .\templates\base.html:79 .\templates\base.html:247
+#: .\templates\inventory\inventory_confirm_delete.html:17
+#: .\templates\inventory\inventory_form.html:17
+msgid "Dashboard"
+msgstr ""
+
+#: .\templates\base.html:84 .\templates\landing.html:56
+msgid "Krishi Salah"
+msgstr ""
+
+#: .\templates\base.html:87 .\templates\landing.html:61
+msgid "Fasal Rakshak"
+msgstr ""
+
+#: .\templates\base.html:90
+msgid "Mandi Bhav"
+msgstr ""
+
+#: .\templates\base.html:93
+msgid "Stock"
+msgstr ""
+
+#: .\templates\base.html:96
+msgid "Sawal"
+msgstr ""
+
+#: .\templates\base.html:100 .\templates\dashboard\farmer_dashboard.html:33
+msgid "Pending"
+msgstr ""
+
+#: .\templates\base.html:103
+msgid "My Advice"
+msgstr ""
+
+#: .\templates\base.html:106
+msgid "Leaderboard"
+msgstr ""
+
+#: .\templates\base.html:119
+msgid "Profile"
+msgstr ""
+
+#: .\templates\base.html:122
+msgid "Notifications"
+msgstr ""
+
+#: .\templates\base.html:126
+msgid "Admin"
+msgstr ""
+
+#: .\templates\base.html:132
+msgid "Language"
+msgstr ""
+
+#: .\templates\base.html:132
+msgid "भाषा"
+msgstr ""
+
+#: .\templates\base.html:147
+msgid "Logout"
+msgstr ""
+
+#: .\templates\base.html:239
+msgid "AgriVision AI - कृषि मित्र"
+msgstr ""
+
+#: .\templates\base.html:240
+msgid ""
+"Digital platform connecting farmers with agricultural experts for better "
+"crop health and yield."
+msgstr ""
+
+#: .\templates\base.html:243
+msgid "Quick Links"
+msgstr ""
+
+#: .\templates\base.html:245
+msgid "Crop Library"
+msgstr ""
+
+#: .\templates\base.html:249
+msgid "Login"
+msgstr ""
+
+#: .\templates\base.html:250
+msgid "Register"
+msgstr ""
+
+#: .\templates\base.html:255
+msgid "Contact"
+msgstr ""
+
+#: .\templates\base.html:262
+msgid "Support: Available 24/7"
+msgstr ""
+
+#: .\templates\base.html:267
+msgid ""
+"AgriVision AI. All rights reserved. | Empowering farmers through technology."
+msgstr ""
+
+#: .\templates\dashboard\farmer_dashboard.html:11
+msgid "Welcome back"
+msgstr ""
+
+#: .\templates\dashboard\farmer_dashboard.html:20
+msgid "Total Queries"
+msgstr ""
+
+#: .\templates\dashboard\farmer_dashboard.html:46
+msgid "Answered"
+msgstr ""
+
+#: .\templates\dashboard\farmer_dashboard.html:59
+msgid "AI Diagnoses"
+msgstr ""
+
+#: .\templates\dashboard\farmer_dashboard.html:75
+msgid "Today's Weather - आज का मौसम"
+msgstr ""
+
+#: .\templates\dashboard\farmer_dashboard.html:87
+msgid "Wind Speed"
+msgstr ""
+
+#: .\templates\dashboard\farmer_dashboard.html:91
+msgid "Humidity"
+msgstr ""
+
+#: .\templates\dashboard\farmer_dashboard.html:95
+msgid "Condition"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:4
+#: .\templates\expert\leaderboard.html:10
+msgid "Expert Leaderboard"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:13
+msgid ""
+"Top-rated agricultural experts based on farmer feedback and community "
+"engagement"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:21
+msgid "Top Experts"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:57
+msgid "Agricultural Expert"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:57
+msgid "Member since"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:97
+msgid "No ratings yet"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:100
+msgid "Average Rating"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:106
+msgid "Questions Answered"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:118
+msgid "No Expert Rankings Available"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:120
+msgid ""
+"Expert rankings will appear here once experts start answering farmer "
+"questions and receiving ratings."
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:135
+msgid "How Rankings Work"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:139
+msgid "Experts are ranked by their average rating from farmer feedback"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:140
+msgid "Number of questions answered is considered as a secondary factor"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:141
+msgid "Only experts with at least one answered question appear in rankings"
+msgstr ""
+
+#: .\templates\expert\leaderboard.html:142
+msgid "Rankings are updated in real-time as new ratings are received"
+msgstr ""
+
+#: .\templates\inventory\inventory_confirm_delete.html:4
+#: .\templates\inventory\inventory_confirm_delete.html:45
+msgid "Delete Inventory Item"
+msgstr ""
+
+#: .\templates\inventory\inventory_confirm_delete.html:26
+#: .\templates\inventory\inventory_form.html:26
+msgid "Inventory"
+msgstr ""
+
+#: .\templates\inventory\inventory_confirm_delete.html:35
+#: .\templates\inventory\inventory_confirm_delete.html:106
+msgid "Delete Item"
+msgstr ""
+
+#: .\templates\inventory\inventory_confirm_delete.html:59
+msgid "Are you sure you want to delete this item?"
+msgstr ""
+
+#: .\templates\inventory\inventory_confirm_delete.html:62
+msgid ""
+"This action cannot be undone. The item will be permanently removed from your "
+"inventory."
+msgstr ""
+
+#: .\templates\inventory\inventory_confirm_delete.html:91
+#: .\templates\market\market_prices.html:110
+msgid "Last updated"
+msgstr ""
+
+#: .\templates\inventory\inventory_confirm_delete.html:102
+#: .\templates\inventory\inventory_form.html:113
+msgid "Cancel"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:49
+msgid "Update the details of your inventory item below"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:51
+msgid "Add a new item to your inventory by filling out the form below"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:64
+#: .\templates\inventory\inventory_list.html:93
+msgid "Item Name"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:75
+#: .\templates\inventory\inventory_list.html:96
+msgid "Quantity"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:86
+msgid "Unit"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:93
+msgid "e.g., kg, liters, bags, pieces"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:100
+#: .\templates\inventory\inventory_list.html:99
+msgid "Category"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:118
+msgid "Update Item"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:120
+msgid "Add Item"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:138
+msgid "Inventory Management Tips"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:142
+msgid "Use clear, descriptive names for your items"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:143
+msgid "Be specific with units (e.g., '50kg bags' instead of just 'bags')"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:144
+msgid "Update quantities regularly to keep track of usage"
+msgstr ""
+
+#: .\templates\inventory\inventory_form.html:145
+msgid "Use appropriate categories to organize your inventory"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:4
+#: .\templates\inventory\inventory_list.html:11
+msgid "Mera Stock"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:14
+msgid "Manage your farm supplies and inventory"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:22
+msgid "Add New Item"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:35
+msgid "Seeds"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:49
+msgid "Fertilizers"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:61
+msgid "Pesticides"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:73
+msgid "Tools"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:84
+msgid "Inventory Items"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:102
+msgid "Last Updated"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:105
+msgid "Actions"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:154
+msgid "Edit"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:158
+msgid "Delete"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:177
+#: .\templates\inventory\inventory_list.html:204
+msgid "Previous"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:183
+#: .\templates\inventory\inventory_list.html:227
+msgid "Next"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:190
+msgid "Showing"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:192
+msgid "to"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:194
+msgid "of"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:196
+msgid "results"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:243
+msgid "No Inventory Items Yet"
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:245
+msgid "Start managing your farm supplies by adding your first inventory item."
+msgstr ""
+
+#: .\templates\inventory\inventory_list.html:252
+msgid "Add Your First Item"
+msgstr ""
+
+#: .\templates\landing.html:4
+msgid "AgriVision AI - Digital Kisan Seva"
+msgstr ""
+
+#: .\templates\landing.html:24
+msgid "कृषि मित्र - Digital Kisan Seva"
+msgstr ""
+
+#: .\templates\landing.html:29
+msgid "Expert Advice for Healthy Crops"
+msgstr ""
+
+#: .\templates\landing.html:30
+msgid "स्वस्थ फसलों के लिए विशेषज्ञ सलाह"
+msgstr ""
+
+#: .\templates\landing.html:38
+msgid "Get Started - शुरू करें"
+msgstr ""
+
+#: .\templates\landing.html:42
+msgid "Login - प्रवेश"
+msgstr ""
+
+#: .\templates\landing.html:47
+msgid "Go to Dashboard - डैशबोर्ड पर जाएं"
+msgstr ""
+
+#: .\templates\landing.html:57
+msgid "Get expert advice for your crop problems"
+msgstr ""
+
+#: .\templates\landing.html:62
+msgid "AI-powered disease diagnosis"
+msgstr ""
+
+#: .\templates\landing.html:66
+msgid "Fasal Gyan"
+msgstr ""
+
+#: .\templates\landing.html:67
+msgid "Comprehensive crop planning library"
+msgstr ""
+
+#: .\templates\landing.html:79
+msgid "How AgriVision AI Helps You"
+msgstr ""
+
+#: .\templates\landing.html:82
+msgid ""
+"Our platform connects farmers with agricultural experts and AI technology "
+"for better crop management"
+msgstr ""
+
+#: .\templates\landing.html:92
+msgid "Expert Consultation"
+msgstr ""
+
+#: .\templates\landing.html:93
+msgid ""
+"Connect directly with agricultural experts for personalized advice on crop "
+"health and farming practices."
+msgstr ""
+
+#: .\templates\market\market_prices.html:4
+#: .\templates\market\market_prices.html:10
+msgid "Mandi Prices"
+msgstr ""
+
+#: .\templates\market\market_prices.html:13
+msgid "Latest crop prices from major markets across India"
+msgstr ""
+
+#: .\templates\market\market_prices.html:39 .\templates\market\prices.html:47
+msgid "Total Crops"
+msgstr ""
+
+#: .\templates\market\market_prices.html:51
+msgid "Trending Up"
+msgstr ""
+
+#: .\templates\market\market_prices.html:63
+msgid "Trending Down"
+msgstr ""
+
+#: .\templates\market\market_prices.html:75 .\templates\market\prices.html:89
+msgid "Stable"
+msgstr ""
+
+#: .\templates\market\market_prices.html:86
+msgid "Top Trending Crops"
+msgstr ""
+
+#: .\templates\market\market_prices.html:107
+#: .\templates\market\prices.html:117
+msgid "Current Market Prices"
+msgstr ""
+
+#: .\templates\market\market_prices.html:119
+msgid "Crop"
+msgstr ""
+
+#: .\templates\market\market_prices.html:122
+msgid "Price"
+msgstr ""
+
+#: .\templates\market\market_prices.html:125
+msgid "Market"
+msgstr ""
+
+#: .\templates\market\market_prices.html:128
+msgid "Date"
+msgstr ""
+
+#: .\templates\market\market_prices.html:131
+msgid "Trend"
+msgstr ""
+
+#: .\templates\market\market_prices.html:184
+#: .\templates\market\prices.html:186
+msgid "Disclaimer"
+msgstr ""
+
+#: .\templates\market\market_prices.html:188
+#: .\templates\market\prices.html:190
+msgid ""
+"Prices shown are indicative and may vary. Please verify current rates at "
+"your local mandi before making any transactions. This data is for reference "
+"purposes only."
+msgstr ""
+
+#: .\templates\market\prices.html:5 .\templates\market\prices.html:13
+msgid "Real-time Market Prices"
+msgstr ""
+
+#: .\templates\market\prices.html:14
+msgid "Live agricultural commodity prices from various mandis across India"
+msgstr ""
+
+#: .\templates\market\prices.html:20
+msgid "Last updated:"
+msgstr ""
+
+#: .\templates\market\prices.html:26
+msgid "Refresh"
+msgstr ""
+
+#: .\templates\market\prices.html:61
+msgid "Price Rising"
+msgstr ""
+
+#: .\templates\market\prices.html:75
+msgid "Price Falling"
+msgstr ""
+
+#: .\templates\market\prices.html:100
+msgid "Current Location & Weather"
+msgstr ""
+
+#: .\templates\market\prices.html:101
+msgid "Detecting location..."
+msgstr ""
+
+#: .\templates\market\prices.html:105
+msgid "Loading..."
+msgstr ""
+
+#: .\templates\market\prices.html:110
+msgid "Detect My Location"
+msgstr ""
+
+#: .\templates\market\prices.html:118
+msgid "Real-time prices from major agricultural markets"
+msgstr ""
+
+#: .\templates\market\prices.html:126
+msgid "Crop / Location"
+msgstr ""
+
+#: .\templates\market\prices.html:129
+msgid "Current Price"
+msgstr ""
+
+#: .\templates\market\prices.html:132
+msgid "Market / Date"
+msgstr ""
+
+#: .\templates\market\prices.html:135
+msgid "Price Trend"
+msgstr ""
+
+#: .\templates\market\prices.html:167
+msgid "Loading market prices..."
+msgstr ""
